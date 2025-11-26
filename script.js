@@ -1,6 +1,6 @@
-// ---------------------------
-// Firebase Setup
-// ---------------------------
+// ======================================================================
+//  Firebase Setup
+// ======================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
@@ -44,27 +44,28 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+getAnalytics(app);
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// ---------------------------------------------------------------------
-// AUTH FUNCTIONS
-// ---------------------------------------------------------------------
+// ======================================================================
+//  AUTH — Sign Up, Login, Logout
+// ======================================================================
 export async function signUpUser() {
-    const email = document.getElementById("emailInput").value;
-    const pass = document.getElementById("passwordInput").value;
+    const email = document.getElementById("emailInput").value.trim();
+    const pass = document.getElementById("passwordInput").value.trim();
 
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        const uid = userCred.user.uid;
 
-        // Create user profile in Firestore
-        await setDoc(doc(db, "users", userCred.user.uid), {
+        await setDoc(doc(db, "users", uid), {
             displayName: email.split("@")[0],
             email: email,
             avatarUrl: "",
+            darkMode: false
         });
 
         window.location.href = "mood.html";
@@ -74,8 +75,8 @@ export async function signUpUser() {
 }
 
 export async function loginUser() {
-    const email = document.getElementById("loginEmail").value;
-    const pass = document.getElementById("loginPassword").value;
+    const email = document.getElementById("loginEmail").value.trim();
+    const pass = document.getElementById("loginPassword").value.trim();
 
     try {
         await signInWithEmailAndPassword(auth, email, pass);
@@ -90,15 +91,47 @@ export function logoutUser() {
     window.location.href = "index.html";
 }
 
-// ---------------------------------------------------------------------
-// PROFILE LOADING / UPDATING
-// ---------------------------------------------------------------------
+// ======================================================================
+//  DARK MODE — Save, Load, Apply
+// ======================================================================
+export async function saveDarkMode(uid, isDark) {
+    await setDoc(doc(db, "users", uid), { darkMode: isDark }, { merge: true });
+}
+
+export async function loadDarkMode(uid) {
+    const snapshot = await getDoc(doc(db, "users", uid));
+    const data = snapshot.data();
+
+    const enabled = data?.darkMode === true;
+
+    document.documentElement.classList.toggle("dark", enabled);
+
+    return enabled;
+}
+
+export async function toggleDarkMode() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const current = document.documentElement.classList.contains("dark");
+    const newValue = !current;
+
+    document.documentElement.classList.toggle("dark", newValue);
+    await saveDarkMode(user.uid, newValue);
+}
+
+// ======================================================================
+//  PROFILE — Load, Edit, Avatar Upload
+// ======================================================================
 export function loadProfile() {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
             window.location.href = "index.html";
             return;
         }
+
+        // apply theme
+        loadDarkMode(user.uid);
 
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const data = userDoc.data();
@@ -109,14 +142,20 @@ export function loadProfile() {
         const avatar = document.getElementById("avatarImg");
         avatar.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
 
-        // avatar upload event
+        // Bind avatar input
         const avatarInput = document.getElementById("avatarInput");
-        avatarInput.onchange = () => uploadAvatar(user.uid, avatarInput.files[0]);
+        if (avatarInput) {
+            avatarInput.onchange = () => uploadAvatar(user.uid, avatarInput.files[0]);
+        }
     });
 }
 
 export async function uploadAvatar(uid, file) {
-    const storageRef = ref(storage, `avatars/${uid}.jpg`);
+    if (!file) return alert("No file selected.");
+
+    const path = `avatars/${uid}_${Date.now()}.jpg`;
+    const storageRef = ref(storage, path);
+
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
 
@@ -130,17 +169,17 @@ export async function updateDisplayName() {
     if (!newName) return;
 
     const user = auth.currentUser;
+    if (!user) return;
 
     await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
-
-    updateProfile(user, { displayName: newName });
+    await updateProfile(user, { displayName: newName });
 
     document.getElementById("displayName").textContent = newName;
 }
 
-// ---------------------------------------------------------------------
-// MOOD
-// ---------------------------------------------------------------------
+// ======================================================================
+//  MOOD — Save Local Mood
+// ======================================================================
 export function selectMood(mood) {
     localStorage.setItem("currentMood", mood);
     window.location.href = "feed.html";
@@ -153,9 +192,9 @@ export function loadMood() {
 }
 document.addEventListener("DOMContentLoaded", loadMood);
 
-// ---------------------------------------------------------------------
-// CREATE POSTS
-// ---------------------------------------------------------------------
+// ======================================================================
+//  POSTS — Create Text & Photo Posts
+// ======================================================================
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
     const text = input.value.trim();
@@ -191,69 +230,62 @@ export async function createPhotoPost() {
         type: "photo",
         imageUrl: url,
         userId: user.uid,
-        created: serverTimestamp(),
+        created: serverTimestamp()
     });
 
     input.value = "";
     window.location.href = "feed.html";
 }
 
-// ---------------------------------------------------------------------
-// LOAD FEED
-// ---------------------------------------------------------------------
+// ======================================================================
+//  FEED — Load Posts
+// ======================================================================
 export async function loadFeed() {
-    const container = document.getElementById("feedContainer");
-    if (!container) return;
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) return;
 
-    const postsQuery = query(
-        collection(db, "posts"),
-        orderBy("created", "desc")
-    );
+        // Load theme
+        loadDarkMode(user.uid);
 
-    const snapshot = await getDocs(postsQuery);
-    container.innerHTML = "";
+        const container = document.getElementById("feedContainer");
+        if (!container) return;
 
-    snapshot.forEach(docData => {
-        const post = docData.data();
-        let div = document.createElement("div");
-        div.className = "post";
+        const postsQuery = query(collection(db, "posts"), orderBy("created", "desc"));
+        const snapshot = await getDocs(postsQuery);
 
-        if (post.type === "text") {
-            div.innerHTML = `
-                <div class="postText">${post.content}</div>
-                <div class="tag">Reflection</div>
-            `;
-        }
-        if (post.type === "photo") {
-            div.innerHTML = `
-                <img src="${post.imageUrl}" class="postPhoto"/>
-                <div class="tag">Photography</div>
-            `;
-        }
+        container.innerHTML = "";
 
-        container.appendChild(div);
+        snapshot.forEach(docData => {
+            const post = docData.data();
+            let div = document.createElement("div");
+            div.className = "post";
+
+            if (post.type === "text") {
+                div.innerHTML = `
+                    <div class="postText">${post.content}</div>
+                    <div class="tag">Reflection</div>
+                `;
+            }
+
+            if (post.type === "photo") {
+                div.innerHTML = `
+                    <img src="${post.imageUrl}" class="postPhoto">
+                    <div class="tag">Photography</div>
+                `;
+            }
+
+            container.appendChild(div);
+        });
     });
 }
 
 document.addEventListener("DOMContentLoaded", loadFeed);
-export function loadProfile() {
-    const user = auth.currentUser;
-    if (!user) {
-        window.location.href = "signup.html";
-        return;
-    }
 
-    document.getElementById("name").textContent = user.displayName || "Anonymous User";
-    document.getElementById("email").textContent = user.email || "";
-    document.getElementById("avatar").src = user.photoURL || "default.png";
-}
-
-export function editProfile() {
-    alert("Profile editing coming soon!");
-}
-
-export function signOutUser() {
-    auth.signOut().then(() => {
-        window.location.href = "index.html";
+// ======================================================================
+//  INDEX AUTO-REDIRECT (if already logged in)
+// ======================================================================
+export function checkAutoLogin() {
+    onAuthStateChanged(auth, (user) => {
+        if (user) window.location.href = "feed.html";
     });
 }
