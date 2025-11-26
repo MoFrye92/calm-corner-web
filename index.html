@@ -1,91 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Load Firebase + your app logic -->
-    <script type="module">
-        import { auth } from "./script.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-        // Auto-redirect if logged in
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                window.location.href = "feed.html";
-            }
-        });
-    </script>
-
-    <script type="module" src="script.js"></script>
-
     <meta charset="UTF-8" />
+    <script type="module" src="script.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>A Calm Corner</title>
+    <title>A Calm Corner – Login</title>
 
     <style>
         body {
             margin: 0;
             background: #f4f6f8;
             color: #1d2b3a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: system-ui, sans-serif;
             display: flex;
             height: 100vh;
-            justify-content: center;
             align-items: center;
-            text-align: center;
+            justify-content: center;
             padding: 20px;
-            animation: fadeIn 1.2s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .container {
-            max-width: 340px;
+            max-width: 360px;
             width: 100%;
+            text-align: center;
         }
 
-        .logo {
-            font-size: 32px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
         }
 
-        .tagline {
-            font-size: 15px;
+        .subtitle {
             color: #4c5c6b;
-            margin-bottom: 40px;
+            font-size: 15px;
+            margin-bottom: 28px;
         }
 
-        .start-btn {
-            display: inline-block;
-            padding: 14px 28px;
+        .form {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            text-align: left;
+        }
+
+        .form label {
+            display: block;
+            margin-top: 12px;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .form input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #d9e0e6;
+            font-size: 14px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
             background: #1d2b3a;
             color: white;
-            border-radius: 14px;
             font-size: 15px;
-            text-decoration: none;
-            transition: opacity 0.2s ease;
+            cursor: pointer;
         }
 
-        .start-btn:hover {
-            opacity: 0.85;
+        .signup-link {
+            margin-top: 18px;
+            display: block;
+            color: #4c5c6b;
+            font-size: 14px;
+            text-decoration: none;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
-        <div class="logo">A Calm Corner</div>
+<div class="container">
+    <h1>Welcome Back</h1>
+    <div class="subtitle">Log in to your calm space</div>
 
-        <div class="tagline">
-            A quiet place to breathe, reflect, and share your thoughts.
-        </div>
+    <div class="form">
+        <label>Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" />
 
-        <a href="signup.html" class="start-btn">Begin</a>
+        <label>Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••" />
+
+        <button class="btn" onclick="loginUser()">Log In</button>
     </div>
+
+    <a class="signup-link" href="signup.html">Don’t have an account? Sign up</a>
+</div>
 
 </body>
 </html>
