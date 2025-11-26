@@ -1,176 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Thread – A Calm Corner</title>
+<meta charset="UTF-8">
+<title>Thread</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-  body {
-    background: #f7f9fa;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding-bottom: 70px;
-    color: #2c3e50;
-  }
+    body {
+        font-family: system-ui, Arial, sans-serif;
+        background: #f5f6f8;
+        margin: 0;
+        padding-bottom: 90px;
+        color: #1d2b3a;
+    }
 
-  .header {
-    padding: 18px;
-    background: white;
-    border-bottom: 1px solid #d9e0e6;
-    text-align: center;
-    font-size: 20px;
-    font-weight: 600;
-  }
+    /* Header */
+    .header {
+        background: white;
+        text-align: center;
+        padding: 24px 14px 16px;
+        font-size: 20px;
+        font-weight: 600;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
 
-  .post-container {
-    background: white;
-    margin: 16px;
-    padding: 18px;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  }
+    .sub {
+        font-size: 14px;
+        color: #4c5c6b;
+    }
 
-  .post-author {
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #34495e;
-  }
+    /* Main post */
+    .main-post {
+        background: white;
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        max-width: 420px;
+        margin: 20px auto 10px;
+        line-height: 1.5;
+    }
 
-  .post-text {
-    font-size: 15px;
-    line-height: 1.4;
-    color: #3c4a55;
-  }
+    .tag {
+        background: #e8ecf0;
+        padding: 4px 10px;
+        border-radius: 10px;
+        font-size: 12px;
+        display: inline-block;
+        margin-top: 10px;
+        color: #1d2b3a;
+    }
 
-  .divider {
-    margin: 20px 0 10px;
-    border-top: 1px solid #e2e6ea;
-  }
+    /* Replies */
+    .replies {
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 0 14px;
+    }
 
-  /* COMMENTS */
-  .comment-box {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 16px;
-  }
+    .reply {
+        background: white;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 14px;
+        line-height: 1.5;
+    }
 
-  .comment {
-    background: white;
-    padding: 14px;
-    border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  }
+    /* Reply box */
+    .reply-box {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: 14px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
+        display: flex;
+        gap: 10px;
+    }
 
-  .comment-author {
-    font-weight: 600;
-    color: #456;
-    margin-bottom: 4px;
-  }
+    .reply-box input {
+        flex: 1;
+        padding: 12px;
+        border: 1px solid #d9e0e6;
+        border-radius: 10px;
+        font-size: 14px;
+        outline: none;
+    }
 
-  .comment-text {
-    font-size: 14px;
-    color: #2f3b45;
-  }
+    .reply-btn {
+        background: #1d2b3a;
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 14px;
+        cursor: pointer;
+    }
 
-  /* ADD COMMENT */
-  .add-comment {
-    margin: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+    /* Bottom nav */
+    .nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #d9e0e6;
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0;
+        font-size: 13px;
+    }
 
-  .add-comment textarea {
-    width: 100%;
-    height: 80px;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #cfd8df;
-    resize: none;
-    font-size: 14px;
-  }
+    .nav a {
+        color: #4c5c6b;
+        text-decoration: none;
+    }
 
-  .comment-btn {
-    padding: 10px;
-    background: #7aa7c7;
-    color: white;
-    text-align: center;
-    border-radius: 8px;
-    text-decoration: none;
-    font-size: 15px;
-    font-weight: 600;
-  }
-
-  /* NAV */
-  .nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    border-top: 1px solid #d9e0e6;
-    display: flex;
-    justify-content: space-around;
-    padding: 14px 0 18px;
-  }
-
-  .nav a {
-    text-decoration: none;
-    font-size: 13px;
-    color: #4c5c6b;
-  }
-
-  .nav a.active {
-    color: #1d2b3a;
-    font-weight: 700;
-  }
+    .nav a.active {
+        color: #1d2b3a;
+        font-weight: 600;
+    }
 </style>
 </head>
 
 <body>
 
-<div class="header">Post Thread</div>
+<div class="header">Thread</div>
 
 <!-- MAIN POST -->
-<div class="post-container">
-  <div class="post-author">@username</div>
-  <div class="post-text">
-    This is where the main post text lives. Calm, simple, and distraction-free.
-  </div>
+<div class="main-post">
+    A quiet moment under soft morning light.  
+    <div class="tag">Nature</div>
 </div>
 
-<div class="divider"></div>
+<!-- REPLIES -->
+<div class="replies" id="replyContainer">
 
-<!-- COMMENTS -->
-<div class="comment-box">
-
-  <div class="comment">
-    <div class="comment-author">@calmuser</div>
-    <div class="comment-text">This feels peaceful. Love this app direction.</div>
-  </div>
-
-  <div class="comment">
-    <div class="comment-author">@thoughtful</div>
-    <div class="comment-text">This is the type of feed I needed fr.</div>
-  </div>
+    <div class="reply">This feels peaceful.</div>
+    <div class="reply">Love the softness here.</div>
 
 </div>
 
-<!-- ADD COMMENT -->
-<div class="add-comment">
-  <textarea placeholder="Add a calm reply..."></textarea>
-  <a href="thread.html" class="comment-btn">Post Comment</a>
+<!-- REPLY INPUT -->
+<div class="reply-box">
+    <input id="replyInput" type="text" placeholder="Write a reply...">
+    <button class="reply-btn" id="sendReply">Send</button>
 </div>
 
-<!-- NAV -->
-<div class="nav">
-  <a href="feed.html">Home</a>
-  <a href="post.html">Post</a>
-  <a href="prefs.html">Prefs</a>
-  <a href="profile.html">Profile</a>
+<!-- BOTTOM NAV -->
+<div class="nav" style="bottom: 60px;">
+    <a href="feed.html" class="active">Home</a>
+    <a href="post.html">Post</a>
+    <a href="prefs.html">Prefs</a>
+    <a href="profile.html">Profile</a>
 </div>
+
+<script>
+// Load draft reply from localStorage
+const input = document.getElementById('replyInput');
+input.value = localStorage.getItem('draftReply') || "";
+
+// Save draft while typing
+input.addEventListener('input', () => {
+    localStorage.setItem('draftReply', input.value);
+});
+
+// Handle posting (static for MVP)
+document.getElementById('sendReply').addEventListener('click', () => {
+    const text = input.value.trim();
+    if (text.length === 0) return;
+
+    const div = document.createElement('div');
+    div.className = "reply";
+    div.textContent = text;
+
+    document.getElementById('replyContainer').appendChild(div);
+
+    input.value = "";
+    localStorage.removeItem('draftReply');
+});
+</script>
 
 </body>
 </html>
