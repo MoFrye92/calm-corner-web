@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Your Profile – A Calm Corner</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: system-ui, sans-serif;
+        background: #f6f8fa;
+        color: #1d2b3a;
+    }
+
+    .header {
+        text-align: center;
+        padding: 25px 0;
+        background: #e9f1f7;
+        border-bottom: 1px solid #d5dee7;
+    }
+    .header-title {
+        font-size: 22px;
+        font-weight: 600;
+    }
+    .header-sub {
+        font-size: 13px;
+        color: #5a6a77;
+        margin-top: 4px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .profile-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        text-align: center;
+    }
+
+    .avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        background: #cbd8e3;
+        margin: 0 auto 15px auto;
+    }
+
+    .name {
+        font-size: 20px;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+    .handle {
+        font-size: 13px;
+        color: #5a6a77;
+    }
+
+    .settings-list {
+        margin-top: 25px;
+    }
+
+    .setting-item {
+        background: white;
+        padding: 14px 16px;
+        border-radius: 10px;
+        font-size: 15px;
+        margin-bottom: 12px;
+        border: 1px solid #e2e8ee;
+    }
+
+    .setting-item a {
+        text-decoration: none;
+        color: #1d2b3a;
+    }
+
+    /* Bottom navigation */
+    .nav {
+        display: flex;
+        justify-content: space-around;
+        padding: 14px 0 20px;
+        border-top: 1px solid #d9e0e6;
+        background: white;
+        position: sticky;
+        bottom: 0;
+    }
+    .nav a {
+        text-decoration: none;
+        color: #4c5c6b;
+        text-align: center;
+        font-size: 13px;
+    }
+    .nav a.active {
+        color: #1d2b3a;
+        font-weight: 600;
+    }
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-title">Your Profile</div>
+    <div class="header-sub">A calm place just for you.</div>
+</div>
+
+<div class="container">
+
+    <div class="profile-card">
+        <div class="avatar"></div>
+        <div class="name">Your Name</div>
+        <div class="handle">@username</div>
+    </div>
+
+    <div class="settings-list">
+
+        <div class="setting-item">
+            <a href="prefs.html">Preferences</a>
+        </div>
+
+        <div class="setting-item">
+            <a href="topics.html">Muted Topics</a>
+        </div>
+
+        <div class="setting-item">
+            <a href="mood.html">Today’s Mood</a>
+        </div>
+
+        <div class="setting-item">
+            <a href="index.html">Log Out</a>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- NAV -->
+<div class="nav">
+    <a href="feed.html">Home</a>
+    <a href="post.html">Post</a>
+    <a href="prefs.html">Prefs</a>
+    <a class="active" href="profile.html">Profile</a>
+</div>
+
+</body>
+</html>
