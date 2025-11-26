@@ -1,165 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Select Your Mood</title>
+<meta charset="UTF-8">
+<title>Select Your Mood</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-        body {
-            margin: 0;
-            background: #f4f6f8;
-            color: #1d2b3a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px 20px;
-            animation: fadeIn 1s ease;
-        }
+<style>
+    body {
+        font-family: system-ui, Arial, sans-serif;
+        background: #f5f7fa;
+        margin: 0;
+        padding: 40px 20px;
+        color: #1d2b3a;
+        text-align: center;
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    h1 {
+        font-size: 26px;
+        margin-bottom: 4px;
+    }
 
-        h1 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
+    .subtitle {
+        font-size: 14px;
+        color: #4c5c6b;
+        margin-bottom: 32px;
+    }
 
-        .subtitle {
-            font-size: 14px;
-            color: #4c5c6b;
-            margin-bottom: 32px;
-            text-align: center;
-        }
+    /* Mood tiles */
+    .mood-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+        max-width: 360px;
+        margin: 0 auto 40px;
+    }
 
-        .mood-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            max-width: 360px;
-            width: 100%;
-            margin-bottom: 34px;
-        }
+    .mood {
+        background: white;
+        padding: 18px 0;
+        font-size: 16px;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        cursor: pointer;
+        transition: background 0.2s ease, border 0.2s ease;
+        border: 2px solid transparent;
+    }
 
-        .mood {
-            background: white;
-            padding: 18px;
-            border-radius: 16px;
-            text-align: center;
-            font-size: 15px;
-            cursor: pointer;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
-            transition: background 0.2s ease, transform 0.15s ease;
-        }
+    .mood.selected {
+        border: 2px solid #1d2b3a;
+        background: #e8ecf0;
+    }
 
-        .mood:hover {
-            transform: translateY(-2px);
-        }
+    .mood:hover {
+        background: #eef1f4;
+    }
 
-        .focus-section {
-            max-width: 380px;
-            width: 100%;
-            margin-bottom: 30px;
-        }
+    /* Focus chips */
+    .focus-section {
+        margin-top: 20px;
+        text-align: left;
+        max-width: 380px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 
-        .focus-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+    .focus-title {
+        font-size: 15px;
+        margin-bottom: 12px;
+        color: #1d2b3a;
+        font-weight: 600;
+    }
 
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+    .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
 
-        .chip {
-            background: white;
-            padding: 10px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: background 0.2s ease;
-        }
+    .chip {
+        background: white;
+        padding: 10px 14px;
+        border-radius: 20px;
+        font-size: 14px;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        transition: background 0.2s ease, border 0.2s ease;
+        border: 2px solid transparent;
+    }
 
-        .chip:hover {
-            background: #eef1f4;
-        }
+    .chip.selected {
+        border: 2px solid #1d2b3a;
+        background: #e8ecf0;
+    }
 
-        .continue-btn {
-            display: block;
-            width: 100%;
-            max-width: 360px;
-            background: #1d2b3a;
-            color: white;
-            padding: 14px 0;
-            text-align: center;
-            font-size: 15px;
-            text-decoration: none;
-            border-radius: 12px;
-            margin-top: 18px;
-            transition: opacity 0.2s ease;
-        }
+    .chip:hover {
+        background: #eef1f4;
+    }
 
-        .continue-btn:hover {
-            opacity: 0.85;
-        }
+    /* Buttons */
+    .continue-btn {
+        display: block;
+        width: 100%;
+        max-width: 360px;
+        background: #1d2b3a;
+        color: white;
+        padding: 14px 0;
+        text-align: center;
+        font-size: 15px;
+        text-decoration: none;
+        border-radius: 12px;
+        margin: 28px auto 0;
+        transition: opacity 0.2s ease;
+    }
 
-        .back-link {
-            margin-top: 18px;
-            font-size: 13px;
-            color: #4c5c6b;
-            text-decoration: none;
-        }
+    .continue-btn:hover {
+        opacity: 0.85;
+    }
 
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    .back-link {
+        display: block;
+        margin-top: 14px;
+        font-size: 13px;
+        color: #4c5c6b;
+        text-decoration: none;
+    }
+
+    .back-link:hover {
+        text-decoration: underline;
+    }
+</style>
 </head>
 
 <body>
 
-    <h1>Select Your Mood</h1>
-    <div class="subtitle">Shape your experience based on how you want to feel.</div>
+<h1>Select Your Mood</h1>
+<div class="subtitle">Shape your experience based on how you want to feel.</div>
 
-    <!-- MOOD GRID -->
-    <div class="mood-grid">
-        <div class="mood">Calm</div>
-        <div class="mood">Neutral</div>
-        <div class="mood">Inspired</div>
-        <div class="mood">Focused</div>
-        <div class="mood" style="grid-column: span 2;">Joyful</div>
+<!-- MOOD GRID -->
+<div class="mood-grid">
+    <div class="mood">Calm</div>
+    <div class="mood">Neutral</div>
+    <div class="mood">Inspired</div>
+    <div class="mood">Focused</div>
+    <div class="mood" style="grid-column: span 2;">Joyful</div>
+</div>
+
+<!-- CONTENT FOCUS -->
+<div class="focus-section">
+    <div class="focus-title">Pick your content focus</div>
+    <div class="chips">
+        <div class="chip">Nature</div>
+        <div class="chip">Art</div>
+        <div class="chip">Daily Life</div>
+        <div class="chip">Pets</div>
+        <div class="chip">Learning</div>
+        <div class="chip">Photography</div>
+        <div class="chip">Lifestyle</div>
+        <div class="chip">Light Humor</div>
+        <div class="chip">Reflection</div>
+        <div class="chip">Wellness</div>
     </div>
+</div>
 
-    <!-- CONTENT FOCUS -->
-    <div class="focus-section">
-        <div class="focus-title">Pick your content focus</div>
+<a href="feed.html" class="continue-btn">Continue</a>
+<a href="signup.html" class="back-link">Back</a>
 
-        <div class="chips">
-            <div class="chip">Nature</div>
-            <div class="chip">Art</div>
-            <div class="chip">Daily Life</div>
-            <div class="chip">Pets</div>
-            <div class="chip">Learning</div>
-            <div class="chip">Photography</div>
-            <div class="chip">Lifestyle</div>
-            <div class="chip">Light Humor</div>
-            <div class="chip">Reflection</div>
-            <div class="chip">Wellness</div>
-        </div>
-    </div>
+<script>
+// -------------------------
+// MOOD SELECTION
+// -------------------------
+const moods = document.querySelectorAll('.mood');
+moods.forEach(m => {
+    m.addEventListener('click', () => {
+        moods.forEach(x => x.classList.remove('selected'));
+        m.classList.add('selected');
 
-    <a href="feed.html" class="continue-btn">Continue</a>
+        // save mood to localStorage
+        localStorage.setItem('selectedMood', m.textContent.trim());
+    });
+});
 
-    <a href="signup.html" class="back-link">Back</a>
+// -------------------------
+// CONTENT FOCUS SELECTION
+// (multiple can be selected)
+// -------------------------
+const chips = document.querySelectorAll('.chip');
+chips.forEach(c => {
+    c.addEventListener('click', () => {
+        c.classList.toggle('selected');
+
+        const selected = [...document.querySelectorAll('.chip.selected')]
+            .map(x => x.textContent.trim());
+
+        // save selected focus list
+        localStorage.setItem('selectedFocus', JSON.stringify(selected));
+    });
+});
+
+// -------------------------
+// PRELOAD PREVIOUS SELECTIONS
+// -------------------------
+window.onload = () => {
+    const savedMood = localStorage.getItem('selectedMood');
+    const savedFocus = JSON.parse(localStorage.getItem('selectedFocus') || "[]");
+
+    // restore mood
+    if (savedMood) {
+        moods.forEach(m => {
+            if (m.textContent.trim() === savedMood) {
+                m.classList.add('selected');
+            }
+        });
+    }
+
+    // restore chips
+    chips.forEach(c => {
+        if (savedFocus.includes(c.textContent.trim())) {
+            c.classList.add('selected');
+        }
+    });
+};
+</script>
 
 </body>
 </html>
