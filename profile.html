@@ -1,175 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Your Profile – A Calm Corner</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Profile – A Calm Corner</title>
 
-<script type="module" src="script.js"></script>
+    <!-- Load Firebase + app logic -->
+    <script type="module" src="script.js"></script>
 
-<style>
-    body {
-        margin: 0;
-        font-family: system-ui, sans-serif;
-        background: #f6f8fa;
-        color: #1d2b3a;
-    }
+    <style>
+        body {
+            margin: 0;
+            font-family: system-ui, sans-serif;
+            background: #f6f8fa;
+            color: #1d2b3a;
+        }
 
-    .header {
-        text-align: center;
-        padding: 25px 0;
-        background: #e9f1f7;
-        border-bottom: 1px solid #d5dee7;
-    }
-    .header-title {
-        font-size: 22px;
-        font-weight: 600;
-    }
-    .header-sub {
-        font-size: 13px;
-        color: #5a6a77;
-        margin-top: 4px;
-    }
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 25px 0;
+            background: #e9f1f7;
+            border-bottom: 1px solid #d5dee7;
+        }
 
-    .container {
-        padding: 20px;
-        max-width: 420px;
-        margin: auto;
-    }
+        .header-title {
+            font-size: 22px;
+            font-weight: 600;
+        }
 
-    .profile-card {
-        background: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        text-align: center;
-    }
+        .header-sub {
+            font-size: 13px;
+            color: #5a6a77;
+            margin-top: 4px;
+        }
 
-    .avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        background: #cbd8e3;
-        margin: 0 auto 15px auto;
-        object-fit: cover;
-    }
+        /* Layout */
+        .container {
+            padding: 20px;
+            max-width: 420px;
+            margin: auto;
+        }
 
-    .edit-btn {
-        margin-top: 6px;
-        font-size: 12px;
-        color: #1d2b3a;
-        cursor: pointer;
-        text-decoration: underline;
-    }
+        .profile-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            text-align: center;
+        }
 
-    .name {
-        font-size: 20px;
-        margin-bottom: 4px;
-        font-weight: 600;
-    }
+        .avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #cbd8e3;
+            margin: 0 auto 15px auto;
+            object-fit: cover;
+        }
 
-    .email {
-        font-size: 13px;
-        color: #5a6a77;
-        margin-bottom: 10px;
-    }
+        .name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
 
-    .settings-list {
-        margin-top: 25px;
-    }
+        .email {
+            font-size: 14px;
+            color: #5a6a77;
+            margin-top: 4px;
+        }
 
-    .setting-item {
-        background: white;
-        padding: 14px 16px;
-        border-radius: 10px;
-        font-size: 15px;
-        margin-bottom: 12px;
-        border: 1px solid #e2e8ee;
-    }
+        .edit-btn {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #1d2b3a;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
-    .setting-item a {
-        text-decoration: none;
-        color: #1d2b3a;
-    }
+        /* Options List */
+        .card {
+            background: white;
+            padding: 18px;
+            border-radius: 14px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
 
-    /* Bottom navigation */
-    .nav {
-        display: flex;
-        justify-content: space-around;
-        padding: 14px 0 20px;
-        border-top: 1px solid #d9e0e6;
-        background: white;
-        position: sticky;
-        bottom: 0;
-    }
-    .nav a {
-        text-decoration: none;
-        color: #4c5c6b;
-        text-align: center;
-        font-size: 13px;
-    }
-    .nav a.active {
-        color: #1d2b3a;
-        font-weight: 600;
-    }
-</style>
+        .option {
+            padding: 14px 0;
+            border-bottom: 1px solid #e3e9ef;
+            font-size: 15px;
+        }
+
+        .option:last-child {
+            border-bottom: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: #1d2b3a;
+            font-weight: 500;
+        }
+    </style>
 </head>
 
-<body>
+<body onload="loadProfile()">
 
-<!-- HEADER -->
-<div class="header">
-    <div class="header-title">Your Profile</div>
-    <div class="header-sub">A calm place just for you.</div>
-</div>
-
-<div class="container">
-
-    <div class="profile-card">
-        <img id="avatarImg" class="avatar" src="" alt="Avatar">
-
-        <input id="avatarInput" type="file" accept="image/*" style="display:none" />
-        <div class="edit-btn" onclick="document.getElementById('avatarInput').click()">
-            Change Avatar
-        </div>
-
-        <div id="displayName" class="name">Loading...</div>
-        <div id="emailField" class="email"></div>
-
-        <button onclick="updateDisplayName()" style="margin-top:10px;padding:8px 12px;border-radius:8px;border:none;background:#1d2b3a;color:white;">
-            Edit Name
-        </button>
+    <div class="header">
+        <div class="header-title">Your Profile</div>
+        <div class="header-sub">Manage your information</div>
     </div>
 
-    <div class="settings-list">
+    <div class="container">
 
-        <div class="setting-item">
-            <a href="prefs.html">Preferences</a>
+        <div class="profile-card">
+            <img id="avatar" class="avatar" src="default.png" alt="Profile Picture" />
+            <div id="name" class="name">Loading…</div>
+            <div id="email" class="email"></div>
+            <div class="edit-btn" onclick="editProfile()">Edit Profile</div>
         </div>
 
-        <div class="setting-item">
-            <a href="topics.html">Muted Topics</a>
-        </div>
-
-        <div class="setting-item">
-            <a href="mood.html">Today’s Mood</a>
-        </div>
-
-        <div class="setting-item" style="color:#d33;cursor:pointer" onclick="logoutUser()">
-            Log Out
+        <div class="card">
+            <div class="option">
+                <a href="prefs.html">Preferences</a>
+            </div>
+            <div class="option">
+                <a href="mood.html">Update Mood</a>
+            </div>
+            <div class="option">
+                <a href="#" onclick="signOutUser()">Log Out</a>
+            </div>
         </div>
 
     </div>
-
-</div>
-
-<!-- NAV -->
-<div class="nav">
-    <a href="feed.html">Home</a>
-    <a href="post.html">Post</a>
-    <a href="prefs.html">Prefs</a>
-    <a class="active" href="profile.html">Profile</a>
-</div>
 
 </body>
 </html>
