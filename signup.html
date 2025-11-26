@@ -2,102 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Your Account</title>
+    <title>Sign Up</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Load Firebase + app logic -->
+    <script type="module" src="script.js"></script>
 
     <style>
         body {
+            font-family: system-ui, Arial, sans-serif;
+            background: #f5f6f8;
             margin: 0;
-            background: #f4f6f8;
-            color: #1d2b3a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            height: 100vh;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
             padding: 20px;
-            animation: fadeIn 1s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .container {
-            max-width: 360px;
-            width: 100%;
-            background: white;
-            padding: 32px;
-            border-radius: 18px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+            color: #1d2b3a;
+            text-align: center;
         }
 
         h1 {
-            font-size: 22px;
-            margin-bottom: 6px;
-            font-weight: 600;
+            margin-top: 20px;
+            font-size: 24px;
+            margin-bottom: 10px;
         }
 
         .subtitle {
+            font-size: 14px;
             color: #4c5c6b;
-            font-size: 14px;
-            margin-bottom: 24px;
+            margin-bottom: 26px;
         }
 
-        input {
+        .form {
+            max-width: 360px;
+            margin: 0 auto;
+            background: white;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            text-align: left;
+        }
+
+        .form label {
+            font-size: 14px;
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        .form input {
             width: 100%;
-            padding: 12px 14px;
-            margin-bottom: 14px;
-            border: 1px solid #d5dce3;
+            padding: 12px;
             border-radius: 10px;
+            border: 1px solid #d9e0e6;
             font-size: 14px;
-            background: #f9fafb;
+            outline: none;
         }
 
-        .next-btn {
-            display: inline-block;
+        .form input:focus {
+            border-color: #1d2b3a;
+        }
+
+        .start-btn {
+            margin-top: 20px;
+            display: block;
             width: 100%;
-            padding: 13px 0;
             background: #1d2b3a;
             color: white;
+            padding: 14px 0;
             border-radius: 12px;
             font-size: 15px;
+            text-align: center;
+            cursor: pointer;
             text-decoration: none;
-            margin-top: 10px;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.2s;
         }
 
-        .next-btn:hover {
+        .start-btn:hover {
             opacity: 0.85;
         }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 18px;
+        .link {
+            margin-top: 16px;
             font-size: 13px;
             color: #4c5c6b;
             text-decoration: none;
         }
 
-        .back-link:hover {
+        .link:hover {
             text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>Create Account</h1>
-        <div class="subtitle">Just a few quick details.</div>
 
-        <input type="text" placeholder="Username" />
-        <input type="number" placeholder="Birth Year" />
+    <h1>Create Account</h1>
+    <div class="subtitle">Start your calmer space.</div>
 
-        <a href="mood.html" class="next-btn">Continue</a>
+    <div class="form">
+        <label>Email</label>
+        <input type="email" id="emailInput" placeholder="you@example.com" />
 
-        <a href="index.html" class="back-link">Back</a>
+        <label>Password</label>
+        <input type="password" id="passwordInput" placeholder="••••••••" />
+
+        <a href="mood.html" class="start-btn">Continue</a>
     </div>
+
+    <a href="index.html" class="link">Back</a>
+
 </body>
 </html>
