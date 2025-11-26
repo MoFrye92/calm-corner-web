@@ -304,63 +304,98 @@ export async function createPhotoPost() {
 }
 
 // ---------------------------------------------------------------------
-// LOAD FEED (feed.html)
+// LOAD FEED – matches new feed.html structure
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  if (!container) return;
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
 
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
 
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
+    const snapshot = await getDocs(postsQuery);
+    container.innerHTML = "";
 
-  snapshot.forEach((docData) => {
-    const post = docData.data();
+    snapshot.forEach(docSnap => {
+        const post = docSnap.data();
+        const postId = docSnap.id;
 
-    const name = post.userDisplayName || "Someone";
-    const avatar = post.userAvatarUrl || "https://via.placeholder.com/40?text=%F0%9F%99%82";
+        // Basic type → label mapping
+        let tagLabel = "Reflection";
+        if (post.type === "photo") tagLabel = "Photography";
 
-    const div = document.createElement("div");
-    div.className = "post";
+        // You can improve this later with real timestamps
+        const metaText = "You · just now";
 
-    // format time if available
-    let timeText = "";
-    if (post.created && post.created.toDate) {
-      const d = post.created.toDate();
-      timeText = d.toLocaleString();
-    }
+        const article = document.createElement("article");
+        article.className = "post";
+        article.dataset.postId = postId;
 
-    let contentHtml = "";
-    if (post.type === "text") {
-      contentHtml = `<div class="postText">${post.content}</div>`;
-    } else if (post.type === "photo") {
-      contentHtml = `<img src="${post.imageUrl}" class="postPhoto"/>`;
-    }
+        // Header
+        const header = document.createElement("div");
+        header.className = "post-header";
 
-    div.innerHTML = `
-      <div class="post-header">
-        <img class="post-avatar" src="${avatar}" alt="${name}'s avatar">
-        <div class="post-meta">
-          <div class="post-user">${name}</div>
-          ${timeText ? `<div class="post-time">${timeText}</div>` : ""}
-        </div>
-      </div>
-      ${contentHtml}
-      <div class="tag">Reflection</div>
-    `;
+        const meta = document.createElement("div");
+        meta.className = "post-meta";
+        meta.textContent = metaText;
 
-    container.appendChild(div);
-  });
+        const tag = document.createElement("div");
+        tag.className = "post-tag";
+        tag.innerHTML = `
+            <span class="post-tag-dot"></span>
+            <span class="post-tag-label">${tagLabel}</span>
+        `;
+
+        header.appendChild(meta);
+        header.appendChild(tag);
+
+        // Content
+        if (post.type === "text") {
+            const textDiv = document.createElement("div");
+            textDiv.className = "postText";
+            textDiv.textContent = post.content || "";
+            article.appendChild(header);
+            article.appendChild(textDiv);
+        } else if (post.type === "photo") {
+            const img = document.createElement("img");
+            img.className = "postPhoto";
+            img.src = post.imageUrl;
+            img.alt = "Shared photo";
+
+            article.appendChild(header);
+            article.appendChild(img);
+        } else {
+            // Unknown type – just skip
+            return;
+        }
+
+        // Footer (no real comments yet, just placeholder)
+        const footer = document.createElement("div");
+        footer.className = "post-footer";
+
+        const commentSummary = document.createElement("div");
+        commentSummary.className = "comment-summary";
+        commentSummary.textContent = "No comments yet";
+
+        const commentBtn = document.createElement("button");
+        commentBtn.className = "comment-toggle-btn";
+        commentBtn.textContent = "Comment";
+
+        // For now, send to thread page with ?id=POST_ID
+        commentBtn.addEventListener("click", () => {
+            window.location.href = `thread.html?post=${encodeURIComponent(postId)}`;
+        });
+
+        footer.appendChild(commentSummary);
+        footer.appendChild(commentBtn);
+
+        article.appendChild(footer);
+
+        container.appendChild(article);
+    });
 }
-
-// Run on all pages, but no-op if #feedContainer is missing
-document.addEventListener("DOMContentLoaded", () => {
-  loadFeed();
-});
 
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
