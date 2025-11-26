@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -46,7 +47,7 @@
             background: white;
             border-radius: 18px;
             padding: 18px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
             margin-bottom: 18px;
         }
 
@@ -62,67 +63,42 @@
         }
 
         .pref-item a {
-            text-decoration: none;
             color: #1d2b3a;
-        }
-
-        .logout {
-            color: #b33a3a;
-            font-weight: 600;
-        }
-
-        /* Bottom navigation */
-        .nav {
-            display: flex;
-            justify-content: space-around;
-            padding: 14px 0 20px;
-            border-top: 1px solid #d9e0e6;
-            background: white;
-            position: sticky;
-            bottom: 0;
-        }
-
-        .nav a {
             text-decoration: none;
-            color: #4c5c6b;
-            text-align: center;
-            font-size: 13px;
+            transition: opacity 0.2s ease;
         }
 
-        .nav a.active {
-            color: #1d2b3a;
-            font-weight: 600;
+        .pref-item a:hover {
+            opacity: 0.7;
         }
     </style>
 </head>
 
 <body>
-
-    <!-- HEADER -->
     <div class="header">
         <div class="header-title">Preferences</div>
-        <div class="header-sub">Adjust your experience.</div>
+        <div class="header-sub">Manage your Calm Corner settings</div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="container">
 
         <div class="card">
-            <div class="pref-item"><a href="mood.html">Change Mood</a></div>
-            <div class="pref-item"><a href="topics.html">Mute Topics</a></div>
-            <div class="pref-item"><a href="#">Account Settings</a></div>
-            <div class="pref-item"><a class="logout" href="index.html">Log Out</a></div>
+            <div class="pref-item">
+                <a href="profile.html">Edit Profile</a>
+            </div>
+            <div class="pref-item">
+                <a href="mood.html">Change Mood</a>
+            </div>
+            <div class="pref-item">
+                <a href="topics.html">Customize Topics</a>
+            </div>
+            <div class="pref-item">
+                <a href="index.html">Return Home</a>
+            </div>
         </div>
 
     </div>
 
-    <!-- BOTTOM NAV -->
-    <div class="nav">
-        <a href="feed.html">Home</a>
-        <a href="post.html">Post</a>
-        <a class="active" href="prefs.html">Prefs</a>
-        <a href="profile.html">Profile</a>
-    </div>
-
 </body>
+
 </html>
