@@ -1,134 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Select Your Mood</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Select Mood</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-    body {
-        font-family: system-ui, Arial, sans-serif;
-        background: #f5f7fa;
-        margin: 0;
-        padding: 40px 20px;
-        color: #1d2b3a;
-        text-align: center;
-    }
+    <!-- Load Firebase + app logic -->
+    <script type="module" src="script.js"></script>
 
-    h1 {
-        font-size: 26px;
-        margin-bottom: 4px;
-    }
+    <style>
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            background: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            color: #1d2b3a;
+        }
 
-    .subtitle {
-        font-size: 14px;
-        color: #4c5c6b;
-        margin-bottom: 32px;
-    }
+        h1 {
+            margin-top: 20px;
+            font-size: 24px;
+        }
 
-    /* Mood tiles */
-    .mood-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 14px;
-        max-width: 360px;
-        margin: 0 auto 40px;
-    }
+        .subtitle {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-bottom: 26px;
+        }
 
-    .mood {
-        background: white;
-        padding: 18px 0;
-        font-size: 16px;
-        border-radius: 16px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        cursor: pointer;
-        transition: background 0.2s ease, border 0.2s ease;
-        border: 2px solid transparent;
-    }
+        .mood-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            max-width: 360px;
+            margin: 0 auto 30px;
+        }
 
-    .mood.selected {
-        border: 2px solid #1d2b3a;
-        background: #e8ecf0;
-    }
+        .mood {
+            background: white;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
 
-    .mood:hover {
-        background: #eef1f4;
-    }
+        .mood:hover {
+            background: #eef1f4;
+        }
 
-    /* Focus chips */
-    .focus-section {
-        margin-top: 20px;
-        text-align: left;
-        max-width: 380px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+        .focus-section {
+            max-width: 360px;
+            margin: 0 auto;
+            text-align: left;
+        }
 
-    .focus-title {
-        font-size: 15px;
-        margin-bottom: 12px;
-        color: #1d2b3a;
-        font-weight: 600;
-    }
+        .focus-title {
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 16px;
+        }
 
-    .chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
 
-    .chip {
-        background: white;
-        padding: 10px 14px;
-        border-radius: 20px;
-        font-size: 14px;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        transition: background 0.2s ease, border 0.2s ease;
-        border: 2px solid transparent;
-    }
+        .chip {
+            background: white;
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: background 0.2s ease;
+        }
 
-    .chip.selected {
-        border: 2px solid #1d2b3a;
-        background: #e8ecf0;
-    }
+        .chip:hover {
+            background: #eef1f4;
+        }
 
-    .chip:hover {
-        background: #eef1f4;
-    }
+        .continue-btn {
+            display: block;
+            width: 100%;
+            max-width: 360px;
+            background: #1d2b3a;
+            color: white;
+            padding: 14px 0;
+            text-align: center;
+            font-size: 15px;
+            text-decoration: none;
+            border-radius: 12px;
+            margin: 22px auto 12px;
+            transition: opacity 0.2s ease;
+        }
 
-    /* Buttons */
-    .continue-btn {
-        display: block;
-        width: 100%;
-        max-width: 360px;
-        background: #1d2b3a;
-        color: white;
-        padding: 14px 0;
-        text-align: center;
-        font-size: 15px;
-        text-decoration: none;
-        border-radius: 12px;
-        margin: 28px auto 0;
-        transition: opacity 0.2s ease;
-    }
+        .continue-btn:hover {
+            opacity: 0.85;
+        }
 
-    .continue-btn:hover {
-        opacity: 0.85;
-    }
+        .back-link {
+            font-size: 13px;
+            color: #4c5c6b;
+            text-decoration: none;
+        }
 
-    .back-link {
-        display: block;
-        margin-top: 14px;
-        font-size: 13px;
-        color: #4c5c6b;
-        text-decoration: none;
-    }
-
-    .back-link:hover {
-        text-decoration: underline;
-    }
-</style>
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
@@ -138,11 +121,11 @@
 
 <!-- MOOD GRID -->
 <div class="mood-grid">
-    <div class="mood">Calm</div>
-    <div class="mood">Neutral</div>
-    <div class="mood">Inspired</div>
-    <div class="mood">Focused</div>
-    <div class="mood" style="grid-column: span 2;">Joyful</div>
+    <div class="mood" onclick="selectMood('Calm')">Calm</div>
+    <div class="mood" onclick="selectMood('Neutral')">Neutral</div>
+    <div class="mood" onclick="selectMood('Inspired')">Inspired</div>
+    <div class="mood" onclick="selectMood('Focused')">Focused</div>
+    <div class="mood" style="grid-column: span 2;" onclick="selectMood('Joyful')">Joyful</div>
 </div>
 
 <!-- CONTENT FOCUS -->
@@ -164,63 +147,6 @@
 
 <a href="feed.html" class="continue-btn">Continue</a>
 <a href="signup.html" class="back-link">Back</a>
-
-<script>
-// -------------------------
-// MOOD SELECTION
-// -------------------------
-const moods = document.querySelectorAll('.mood');
-moods.forEach(m => {
-    m.addEventListener('click', () => {
-        moods.forEach(x => x.classList.remove('selected'));
-        m.classList.add('selected');
-
-        // save mood to localStorage
-        localStorage.setItem('selectedMood', m.textContent.trim());
-    });
-});
-
-// -------------------------
-// CONTENT FOCUS SELECTION
-// (multiple can be selected)
-// -------------------------
-const chips = document.querySelectorAll('.chip');
-chips.forEach(c => {
-    c.addEventListener('click', () => {
-        c.classList.toggle('selected');
-
-        const selected = [...document.querySelectorAll('.chip.selected')]
-            .map(x => x.textContent.trim());
-
-        // save selected focus list
-        localStorage.setItem('selectedFocus', JSON.stringify(selected));
-    });
-});
-
-// -------------------------
-// PRELOAD PREVIOUS SELECTIONS
-// -------------------------
-window.onload = () => {
-    const savedMood = localStorage.getItem('selectedMood');
-    const savedFocus = JSON.parse(localStorage.getItem('selectedFocus') || "[]");
-
-    // restore mood
-    if (savedMood) {
-        moods.forEach(m => {
-            if (m.textContent.trim() === savedMood) {
-                m.classList.add('selected');
-            }
-        });
-    }
-
-    // restore chips
-    chips.forEach(c => {
-        if (savedFocus.includes(c.textContent.trim())) {
-            c.classList.add('selected');
-        }
-    });
-};
-</script>
 
 </body>
 </html>
