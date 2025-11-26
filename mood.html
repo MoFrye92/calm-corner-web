@@ -5,7 +5,7 @@
     <title>Select Mood</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Load Firebase + app logic -->
+    <!-- Global Firebase App Logic -->
     <script type="module" src="script.js"></script>
 
     <style>
@@ -62,91 +62,27 @@
             font-weight: 600;
             font-size: 16px;
         }
-
-        .chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .chip {
-            background: white;
-            padding: 10px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: background 0.2s ease;
-        }
-
-        .chip:hover {
-            background: #eef1f4;
-        }
-
-        .continue-btn {
-            display: block;
-            width: 100%;
-            max-width: 360px;
-            background: #1d2b3a;
-            color: white;
-            padding: 14px 0;
-            text-align: center;
-            font-size: 15px;
-            text-decoration: none;
-            border-radius: 12px;
-            margin: 22px auto 12px;
-            transition: opacity 0.2s ease;
-        }
-
-        .continue-btn:hover {
-            opacity: 0.85;
-        }
-
-        .back-link {
-            font-size: 13px;
-            color: #4c5c6b;
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 
 <body>
 
-<h1>Select Your Mood</h1>
-<div class="subtitle">Shape your experience based on how you want to feel.</div>
+    <h1>Select Your Mood</h1>
+    <div class="subtitle">Choose how you're feeling today</div>
 
-<!-- MOOD GRID -->
-<div class="mood-grid">
-    <div class="mood" onclick="selectMood('Calm')">Calm</div>
-    <div class="mood" onclick="selectMood('Neutral')">Neutral</div>
-    <div class="mood" onclick="selectMood('Inspired')">Inspired</div>
-    <div class="mood" onclick="selectMood('Focused')">Focused</div>
-    <div class="mood" style="grid-column: span 2;" onclick="selectMood('Joyful')">Joyful</div>
-</div>
-
-<!-- CONTENT FOCUS -->
-<div class="focus-section">
-    <div class="focus-title">Pick your content focus</div>
-    <div class="chips">
-        <div class="chip">Nature</div>
-        <div class="chip">Art</div>
-        <div class="chip">Daily Life</div>
-        <div class="chip">Pets</div>
-        <div class="chip">Learning</div>
-        <div class="chip">Photography</div>
-        <div class="chip">Lifestyle</div>
-        <div class="chip">Light Humor</div>
-        <div class="chip">Reflection</div>
-        <div class="chip">Wellness</div>
+    <div class="mood-grid">
+        <div class="mood" onclick="selectMood('Calm')">😌 Calm</div>
+        <div class="mood" onclick="selectMood('Happy')">😊 Happy</div>
+        <div class="mood" onclick="selectMood('Focused')">🎯 Focused</div>
+        <div class="mood" onclick="selectMood('Tired')">😴 Tired</div>
+        <div class="mood" onclick="selectMood('Stressed')">😣 Stressed</div>
+        <div class="mood" onclick="selectMood('Grateful')">🙏 Grateful</div>
     </div>
-</div>
 
-<a href="feed.html" class="continue-btn">Continue</a>
-<a href="signup.html" class="back-link">Back</a>
+    <div class="focus-section">
+        <div class="focus-title">Today's Focus</div>
+        <div id="focusText">Tap a mood above</div>
+    </div>
 
 </body>
 </html>
