@@ -103,6 +103,10 @@
             color: #1d2b3a;
             font-weight: 500;
         }
+
+        #avatarInput {
+            display: none;
+        }
     </style>
 </head>
 
@@ -116,10 +120,18 @@
     <div class="container">
 
         <div class="profile-card">
-            <img id="avatar" class="avatar" src="default.png" alt="Profile Picture" />
-            <div id="name" class="name">Loading…</div>
-            <div id="email" class="email"></div>
-            <div class="edit-btn" onclick="editProfile()">Edit Profile</div>
+            <img id="avatarImg" class="avatar" src="default.png" alt="Profile Picture" />
+
+            <input id="avatarInput" type="file" accept="image/*" />
+
+            <div class="edit-btn" onclick="document.getElementById('avatarInput').click()">
+                Change Photo
+            </div>
+
+            <div id="displayName" class="name">Loading…</div>
+            <div id="emailField" class="email"></div>
+
+            <div class="edit-btn" onclick="updateDisplayName()">Edit Name</div>
         </div>
 
         <div class="card">
@@ -130,7 +142,7 @@
                 <a href="mood.html">Update Mood</a>
             </div>
             <div class="option">
-                <a href="#" onclick="signOutUser()">Log Out</a>
+                <a href="#" onclick="logoutUser()">Log Out</a>
             </div>
         </div>
 
