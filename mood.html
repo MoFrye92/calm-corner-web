@@ -5,7 +5,7 @@
     <title>Select Mood</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Load Firebase + app logic -->
+    <!-- Load Firebase + app logic (for feed, posts, etc.) -->
     <script type="module" src="script.js"></script>
 
     <style>
@@ -79,18 +79,78 @@
 
     <!-- Mood choices -->
     <div class="mood-grid">
+        <!-- Keep these in sync with post.html -->
         <div class="mood" onclick="selectMood('Calm')">Calm</div>
         <div class="mood" onclick="selectMood('Overwhelmed')">Overwhelmed</div>
         <div class="mood" onclick="selectMood('Anxious')">Anxious</div>
         <div class="mood" onclick="selectMood('Hopeful')">Hopeful</div>
+
+        <!--
+        If post.html has more moods, add them here, for example:
+        <div class="mood" onclick="selectMood('Grateful')">Grateful</div>
+        <div class="mood" onclick="selectMood('Reflective')">Reflective</div>
+        -->
     </div>
 
-    <!-- Focus area (used by loadMood() via #focusText) -->
+    <!-- Focus area: shows interest based on saved mood -->
     <div class="focus-section">
         <div class="focus-title">Today’s focus</div>
         <div class="focus-body" id="focusText">
             Pick a mood above to set your focus.
         </div>
     </div>
+
+    <!-- Local script just for mood + interest handling -->
+    <script>
+        // Map moods -> the "interest" / focus description
+        const moodInterestMap = {
+            Calm: {
+                interest: "Slow, gentle content to keep things steady."
+            },
+            Overwhelmed: {
+                interest: "Short, grounding posts and tiny next steps."
+            },
+            Anxious: {
+                interest: "Reassuring notes, breathing prompts, and soft distractions."
+            },
+            Hopeful: {
+                interest: "Stories about growth, gratitude, and small wins."
+            }
+
+            // If you add moods in post.html, mirror them here:
+            // Grateful: { interest: "Gratitude check-ins and small bright spots." },
+            // Reflective: { interest: "Journaling prompts and deeper reflections." },
+        };
+
+        // Called when a mood tile is tapped
+        function selectMood(moodKey) {
+            const moodConfig = moodInterestMap[moodKey] || { interest: "" };
+
+            // Save both mood & interest so other pages can use them if needed
+            localStorage.setItem("currentMood", moodKey);
+            localStorage.setItem("currentInterest", moodConfig.interest);
+
+            // Go to the feed; script.js will still load posts as usual
+            window.location.href = "feed.html";
+        }
+
+        // On load, show the last chosen mood + interest (if any)
+        window.addEventListener("DOMContentLoaded", () => {
+            const savedMood = localStorage.getItem("currentMood");
+            const savedInterest = localStorage.getItem("currentInterest");
+            const focusEl = document.getElementById("focusText");
+
+            if (!focusEl) return;
+
+            if (savedMood && savedInterest) {
+                focusEl.textContent = `${savedMood}: ${savedInterest}`;
+            } else if (savedMood) {
+                // Fallback if interest wasn’t saved yet
+                focusEl.textContent = `Content for: ${savedMood}`;
+            } else {
+                focusEl.textContent = "Pick a mood above to set your focus.";
+            }
+        });
+    </script>
 </body>
 </html>
