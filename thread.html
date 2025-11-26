@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thread – A Calm Corner</title>
+
+<style>
+  body {
+    background: #f7f9fa;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding-bottom: 70px;
+    color: #2c3e50;
+  }
+
+  .header {
+    padding: 18px;
+    background: white;
+    border-bottom: 1px solid #d9e0e6;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .post-container {
+    background: white;
+    margin: 16px;
+    padding: 18px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .post-author {
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #34495e;
+  }
+
+  .post-text {
+    font-size: 15px;
+    line-height: 1.4;
+    color: #3c4a55;
+  }
+
+  .divider {
+    margin: 20px 0 10px;
+    border-top: 1px solid #e2e6ea;
+  }
+
+  /* COMMENTS */
+  .comment-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px;
+  }
+
+  .comment {
+    background: white;
+    padding: 14px;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .comment-author {
+    font-weight: 600;
+    color: #456;
+    margin-bottom: 4px;
+  }
+
+  .comment-text {
+    font-size: 14px;
+    color: #2f3b45;
+  }
+
+  /* ADD COMMENT */
+  .add-comment {
+    margin: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .add-comment textarea {
+    width: 100%;
+    height: 80px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #cfd8df;
+    resize: none;
+    font-size: 14px;
+  }
+
+  .comment-btn {
+    padding: 10px;
+    background: #7aa7c7;
+    color: white;
+    text-align: center;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* NAV */
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #d9e0e6;
+    display: flex;
+    justify-content: space-around;
+    padding: 14px 0 18px;
+  }
+
+  .nav a {
+    text-decoration: none;
+    font-size: 13px;
+    color: #4c5c6b;
+  }
+
+  .nav a.active {
+    color: #1d2b3a;
+    font-weight: 700;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="header">Post Thread</div>
+
+<!-- MAIN POST -->
+<div class="post-container">
+  <div class="post-author">@username</div>
+  <div class="post-text">
+    This is where the main post text lives. Calm, simple, and distraction-free.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- COMMENTS -->
+<div class="comment-box">
+
+  <div class="comment">
+    <div class="comment-author">@calmuser</div>
+    <div class="comment-text">This feels peaceful. Love this app direction.</div>
+  </div>
+
+  <div class="comment">
+    <div class="comment-author">@thoughtful</div>
+    <div class="comment-text">This is the type of feed I needed fr.</div>
+  </div>
+
+</div>
+
+<!-- ADD COMMENT -->
+<div class="add-comment">
+  <textarea placeholder="Add a calm reply..."></textarea>
+  <a href="thread.html" class="comment-btn">Post Comment</a>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <a href="feed.html">Home</a>
+  <a href="post.html">Post</a>
+  <a href="prefs.html">Prefs</a>
+  <a href="profile.html">Profile</a>
+</div>
+
+</body>
+</html>
