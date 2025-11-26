@@ -100,6 +100,11 @@ export function logoutUser() {
   });
 }
 
+// Backward-compat alias if HTML still calls signOutUser()
+export function signOutUser() {
+  logoutUser();
+}
+
 // ---------------------------------------------------------------------
 // PROFILE LOADING / UPDATING (profile.html)
 // ---------------------------------------------------------------------
@@ -120,10 +125,21 @@ export function loadProfile() {
           avatarUrl: ""
         };
 
-    const nameEl = document.getElementById("displayName");
-    const emailEl = document.getElementById("emailField");
-    const avatarEl = document.getElementById("avatarImg");
-    const avatarInput = document.getElementById("avatarInput");
+    // New IDs (profile.html current version)
+    const displayNameEl = document.getElementById("displayName");
+    const emailFieldEl = document.getElementById("emailField");
+    const avatarImgEl = document.getElementById("avatarImg");
+
+    if (displayNameEl) displayNameEl.textContent = data.displayName || "Anonymous";
+    if (emailFieldEl) emailFieldEl.textContent = data.email || user.email || "";
+    if (avatarImgEl) {
+      avatarImgEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
+    }
+
+    // Old IDs, in case any page still uses them
+    const nameEl = document.getElementById("name");
+    const emailEl = document.getElementById("email");
+    const avatarEl = document.getElementById("avatar");
 
     if (nameEl) nameEl.textContent = data.displayName || "Anonymous";
     if (emailEl) emailEl.textContent = data.email || user.email || "";
@@ -131,6 +147,8 @@ export function loadProfile() {
       avatarEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
     }
 
+    // Avatar upload input (only on profile page)
+    const avatarInput = document.getElementById("avatarInput");
     if (avatarInput) {
       avatarInput.onchange = () => {
         if (avatarInput.files && avatarInput.files[0]) {
@@ -153,7 +171,10 @@ export async function uploadAvatar(uid, file) {
       { merge: true }
     );
 
-    const avatarEl = document.getElementById("avatarImg");
+    const avatarImgEl = document.getElementById("avatarImg");
+    if (avatarImgEl) avatarImgEl.src = url;
+
+    const avatarEl = document.getElementById("avatar");
     if (avatarEl) avatarEl.src = url;
   } catch (err) {
     console.error(err);
@@ -177,7 +198,10 @@ export async function updateDisplayName() {
 
     await updateProfile(user, { displayName: newName });
 
-    const nameEl = document.getElementById("displayName");
+    const displayNameEl = document.getElementById("displayName");
+    if (displayNameEl) displayNameEl.textContent = newName;
+
+    const nameEl = document.getElementById("name");
     if (nameEl) nameEl.textContent = newName;
   } catch (err) {
     console.error(err);
@@ -199,7 +223,7 @@ export function loadMood() {
   if (label) label.textContent = `Content for: ${mood}`;
 }
 
-// run on all pages, harmless if #focusText is missing
+// Run on all pages, harmless if #focusText is missing
 document.addEventListener("DOMContentLoaded", loadMood);
 
 // ---------------------------------------------------------------------
@@ -299,12 +323,11 @@ export async function loadFeed() {
     });
   } catch (err) {
     console.error(err);
-    const container = document.getElementById("feedContainer");
     if (container) container.textContent = "Could not load feed.";
   }
 }
 
-// run on all pages, but no-op if #feedContainer is missing
+// Run on all pages, but no-op if #feedContainer is missing
 document.addEventListener("DOMContentLoaded", loadFeed);
 
 // ---------------------------------------------------------------------
@@ -409,6 +432,7 @@ export async function createReply() {
 window.signUpUser = signUpUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;
+window.signOutUser = signOutUser;
 window.loadProfile = loadProfile;
 window.updateDisplayName = updateDisplayName;
 window.selectMood = selectMood;
