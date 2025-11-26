@@ -230,101 +230,112 @@ document.addEventListener("DOMContentLoaded", loadMood);
 // CREATE POSTS (post.html)
 // ---------------------------------------------------------------------
 export async function createTextPost() {
-  const input = document.getElementById("textPostInput");
-  const text = input?.value.trim();
+    const input = document.getElementById("textPostInput");
+    const text = input.value.trim();
 
-  if (!text) return alert("Write something first.");
+    if (!text) return alert("Write something first.");
 
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
 
-  try {
-    await addDoc(collection(db, "posts"), {
-      type: "text",
-      content: text,
-      userId: user.uid,
-      created: serverTimestamp()
-    });
-
-    if (input) input.value = "";
-    window.location.href = "feed.html";
-  } catch (err) {
-    console.error(err);
-    alert("Could not create post.");
-  }
-}
-
-export async function createPhotoPost() {
-  const input = document.getElementById("photoPostInput");
-  if (!input || !input.files || !input.files.length) {
-    return alert("Upload a photo first.");
-  }
-
-  const file = input.files[0];
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
-
-  try {
-    const storageRef = ref(
-      storage,
-      `posts/${Date.now()}_${file.name}`
-    );
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+    // get profile info for this user
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const profile = userDoc.exists() ? userDoc.data() : {};
 
     await addDoc(collection(db, "posts"), {
-      type: "photo",
-      imageUrl: url,
-      userId: user.uid,
-      created: serverTimestamp()
+        type: "text",
+        content: text,
+        userId: user.uid,
+        userDisplayName: profile.displayName || user.email.split("@")[0],
+        userAvatarUrl: profile.avatarUrl || "",
+        created: serverTimestamp()
     });
 
     input.value = "";
     window.location.href = "feed.html";
-  } catch (err) {
-    console.error(err);
-    alert("Could not create photo post.");
-  }
+}
+
+export async function createPhotoPost() {
+    const input = document.getElementById("photoPostInput");
+    if (!input.files.length) return alert("Upload a photo first.");
+
+    const file = input.files[0];
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
+
+    // get profile info for this user
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const profile = userDoc.exists() ? userDoc.data() : {};
+
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    await addDoc(collection(db, "posts"), {
+        type: "photo",
+        imageUrl: url,
+        userId: user.uid,
+        userDisplayName: profile.displayName || user.email.split("@")[0],
+        userAvatarUrl: profile.avatarUrl || "",
+        created: serverTimestamp(),
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
 // ---------------------------------------------------------------------
 // LOAD FEED (feed.html)
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  if (!container) return; // not on feed page
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
 
-  try {
     const postsQuery = query(
-      collection(db, "posts"),
-      orderBy("created", "desc")
+        collection(db, "posts"),
+        orderBy("created", "desc")
     );
+
     const snapshot = await getDocs(postsQuery);
     container.innerHTML = "";
 
-    snapshot.forEach((docData) => {
-      const post = docData.data();
-      const div = document.createElement("div");
-      div.className = "post";
+    snapshot.forEach(docData => {
+        const post = docData.data();
 
-      if (post.type === "text") {
-        div.innerHTML = `
-          <div class="postText">${post.content}</div>
-          <div class="tag">Reflection</div>
-        `;
-      } else if (post.type === "photo") {
-        div.innerHTML = `
-          <img src="${post.imageUrl}" class="postPhoto" />
-          <div class="tag">Photography</div>
-        `;
-      }
+        const name = post.userDisplayName || "Someone";
+        const avatar = post.userAvatarUrl || "https://via.placeholder.com/40?text=%F0%9F%99%82";
 
-      container.appendChild(div);
+        let div = document.createElement("div");
+        div.className = "post";
+
+        // format time if available
+        let timeText = "";
+        if (post.created && post.created.toDate) {
+            const d = post.created.toDate();
+            timeText = d.toLocaleString();
+        }
+
+        let contentHtml = "";
+        if (post.type === "text") {
+            contentHtml = `<div class="postText">${post.content}</div>`;
+        } else if (post.type === "photo") {
+            contentHtml = `<img src="${post.imageUrl}" class="postPhoto"/>`;
+        }
+
+        div.innerHTML = `
+            <div class="post-header">
+                <img class="post-avatar" src="${avatar}" alt="${name}'s avatar">
+                <div class="post-meta">
+                    <div class="post-user">${name}</div>
+                    ${timeText ? `<div class="post-time">${timeText}</div>` : ""}
+                </div>
+            </div>
+            ${contentHtml}
+            <div class="tag">Reflection</div>
+        `;
+
+        container.appendChild(div);
     });
-  } catch (err) {
-    console.error(err);
-    if (container) container.textContent = "Could not load feed.";
-  }
 }
 
 // Run on all pages, but no-op if #feedContainer is missing
