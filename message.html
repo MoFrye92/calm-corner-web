@@ -53,6 +53,37 @@
             font-weight: 600;
             color: #1d2b3a;
         }
+        .nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #d9e0e6;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 10px;
+  font-size: 12px;
+  z-index: 20;
+}
+
+.nav a {
+  color: #4c5c6b;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav a .icon {
+  font-size: 18px;
+}
+
+.nav a.active {
+  font-weight: 600;
+  color: #1d2b3a;
+}
     </style>
 </head>
 
@@ -65,10 +96,26 @@
 </div>
 
 <div class="nav">
-    <a href="feed.html">Home</a>
-    <a href="post.html">Post</a>
-    <a href="prefs.html">Prefs</a>
-    <a class="active" href="message.html">Messages</a>
+  <a href="feed.html" >
+    <span class="icon">🏠</span>
+    <span>Home</span>
+  </a>
+  <a href="post.html">
+    <span class="icon">✍️</span>
+    <span>Post</span>
+  </a>
+  <a href="topics.html">
+    <span class="icon">🧩</span>
+    <span>Topics</span>
+  </a>
+  <a href="message.html">
+    <span class="icon">💬</span>
+    <span>Messages</span>
+  </a>
+  <a href="profile.html class="active"">
+    <span class="icon">👤</span>
+    <span>Profile</span>
+  </a>
 </div>
 
 </body>
