@@ -2,6 +2,18 @@
 <html lang="en">
 <head>
     <!-- Load Firebase + your app logic -->
+    <script type="module">
+        import { auth } from "./script.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // Auto-redirect if logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = "feed.html";
+            }
+        });
+    </script>
+
     <script type="module" src="script.js"></script>
 
     <meta charset="UTF-8" />
@@ -64,11 +76,16 @@
 </head>
 
 <body>
+
     <div class="container">
         <div class="logo">A Calm Corner</div>
-        <div class="tagline">A quieter way to share.</div>
 
-        <a href="signup.html" class="start-btn">Start</a>
+        <div class="tagline">
+            A quiet place to breathe, reflect, and share your thoughts.
+        </div>
+
+        <a href="signup.html" class="start-btn">Begin</a>
     </div>
+
 </body>
 </html>
