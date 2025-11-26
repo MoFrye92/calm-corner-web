@@ -1,148 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="script.js" defer></script>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Messages – A Calm Corner</title>
+    <meta charset="UTF-8">
+    <title>Messages</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-    body {
-        margin: 0;
-        font-family: 'Inter', sans-serif;
-        background: #f6f8f9;
-        color: #1d2b3a;
-    }
+    <!-- Load Firebase + app logic -->
+    <script type="module" src="script.js"></script>
 
-    /* HEADER */
-    .header {
-        padding: 25px 20px 12px;
-        text-align: center;
-        background: #f6f8f9;
-        border-bottom: 1px solid #e0e7ec;
-    }
+    <style>
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            background: #f5f6f8;
+            margin: 0;
+            padding: 20px;
+            color: #1d2b3a;
+        }
 
-    .header-title {
-        font-size: 22px;
-        font-weight: 600;
-    }
+        h1 {
+            text-align: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
 
-    .header-sub {
-        font-size: 14px;
-        color: #6d7a87;
-        margin-top: 4px;
-    }
+        .message-card {
+            background: white;
+            padding: 18px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
 
-    /* MESSAGES LIST */
-    .container {
-        padding: 20px;
-        max-width: 500px;
-        margin: auto;
-    }
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #d9e0e6;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            font-size: 13px;
+        }
 
-    .message-card {
-        background: white;
-        padding: 18px;
-        border-radius: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        margin-bottom: 15px;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-    }
+        .nav a {
+            color: #4c5c6b;
+            text-decoration: none;
+        }
 
-    .avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        background: #dce3e8;
-        margin-right: 15px;
-    }
-
-    .msg-info {
-        flex: 1;
-    }
-
-    .msg-user {
-        font-weight: 600;
-        font-size: 15px;
-        margin-bottom: 4px;
-    }
-
-    .msg-preview {
-        color: #6d7a87;
-        font-size: 13px;
-    }
-
-    /* NAV */
-    .nav {
-        display: flex;
-        justify-content: space-around;
-        padding: 14px 0 20px;
-        border-top: 1px solid #d9e0e6;
-        background: white;
-        position: sticky;
-        bottom: 0;
-    }
-
-    .nav a {
-        text-decoration: none;
-        color: #4c5c6b;
-        text-align: center;
-        font-size: 13px;
-    }
-
-    .nav a.active {
-        color: #1d2b3a;
-        font-weight: 600;
-    }
-</style>
+        .nav a.active {
+            font-weight: 600;
+            color: #1d2b3a;
+        }
+    </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
-<div class="header">
-    <div class="header-title">Messages</div>
-    <div class="header-sub">Quiet, gentle conversations.</div>
+<h1>Messages</h1>
+
+<div class="message-card">
+    This is where your messages will appear.
 </div>
 
-<div class="container">
-
-    <!-- Message Thread Example -->
-    <div class="message-card">
-        <div class="avatar"></div>
-        <div class="msg-info">
-            <div class="msg-user">A Calm Bot</div>
-            <div class="msg-preview">Your daily check-in is ready 💬</div>
-        </div>
-    </div>
-
-    <div class="message-card">
-        <div class="avatar"></div>
-        <div class="msg-info">
-            <div class="msg-user">Gio</div>
-            <div class="msg-preview">“Yo, how’s the webapp coming?”</div>
-        </div>
-    </div>
-
-    <div class="message-card">
-        <div class="avatar"></div>
-        <div class="msg-info">
-            <div class="msg-user">Jenn</div>
-            <div class="msg-preview">“Babe, this looks really good 🫶🏽”</div>
-        </div>
-    </div>
-
-</div>
-
-<!-- BOTTOM NAV -->
 <div class="nav">
     <a href="feed.html">Home</a>
     <a href="post.html">Post</a>
     <a href="prefs.html">Prefs</a>
     <a href="profile.html">Profile</a>
-    <a class="active" href="message.html">Msgs</a>
 </div>
 
 </body>
