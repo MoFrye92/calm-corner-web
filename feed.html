@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Feed</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 24px 20px 14px;
+            background: #f4f6f8;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-sub {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-top: 4px;
+        }
+
+        /* Feed area */
+        .feed {
+            padding: 20px;
+            flex: 1;
+        }
+
+        /* Post card */
+        .post-card {
+            background: white;
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+
+        .post-user {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .post-caption {
+            color: #4c5c6b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 180px;
+            background: #dfe4ea;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 18px;
+            font-size: 14px;
+            color: #1d2b3a;
+        }
+
+        /* Bottom navigation */
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 14px 0 20px;
+            border-top: 1px solid #d9e0e6;
+            background: white;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #4c5c6b;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .nav a.active {
+            color: #1d2b3a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-title">A Calm Corner</div>
+        <div class="header-sub">Mood: Calm</div>
+    </div>
+
+    <!-- FEED -->
+    <div class="feed">
+
+        <!-- SAMPLE POST 1 -->
+        <div class="post-card">
+            <div class="post-user">UserOne</div>
+            <div class="post-caption">A quiet moment today.</div>
+            <div class="post-image"></div>
+            <div class="post-actions">
+                <span>Like</span>
+                <span>Comment</span>
+            </div>
+        </div>
+
+        <!-- SAMPLE POST 2 -->
+        <div class="post-card">
+            <div class="post-user">AnotherUser</div>
+            <div class="post-caption">Soft inspiration this morning.</div>
+            <div class="post-image"></div>
+            <div class="post-actions">
+                <span>Like</span>
+                <span>Comment</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="nav">
+        <a class="active" href="feed.html">Home</a>
+        <a href="post.html">Post</a>
+        <a href="prefs.html">Prefs</a>
+        <a href="profile.html">Profile</a>
+    </div>
+
+</body>
+</html>
