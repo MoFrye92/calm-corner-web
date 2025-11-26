@@ -1,189 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Thread</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <title>Thread</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<style>
-    body {
-        font-family: system-ui, Arial, sans-serif;
-        background: #f5f6f8;
-        margin: 0;
-        padding-bottom: 90px;
-        color: #1d2b3a;
-    }
+    <script type="module" src="script.js"></script>
 
-    /* Header */
-    .header {
-        background: white;
-        text-align: center;
-        padding: 24px 14px 16px;
-        font-size: 20px;
-        font-weight: 600;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
+    <style>
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            background: #f5f6f8;
+            margin: 0;
+            padding-bottom: 120px;
+            color: #1d2b3a;
+        }
 
-    .sub {
-        font-size: 14px;
-        color: #4c5c6b;
-    }
+        /* Header */
+        .header {
+            background: white;
+            text-align: center;
+            padding: 24px 14px 16px;
+            font-size: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-    /* Main post */
-    .main-post {
-        background: white;
-        padding: 20px;
-        border-radius: 14px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        max-width: 420px;
-        margin: 20px auto 10px;
-        line-height: 1.5;
-    }
+        .sub {
+            font-size: 14px;
+            color: #4c5c6b;
+        }
 
-    .tag {
-        background: #e8ecf0;
-        padding: 4px 10px;
-        border-radius: 10px;
-        font-size: 12px;
-        display: inline-block;
-        margin-top: 10px;
-        color: #1d2b3a;
-    }
+        /* Main post */
+        .main-post {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            max-width: 420px;
+            margin: 20px auto 10px;
+            line-height: 1.5;
+        }
 
-    /* Replies */
-    .replies {
-        max-width: 420px;
-        margin: 0 auto;
-        padding: 0 14px;
-    }
+        .tag {
+            background: #e8ecf0;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            display: inline-block;
+            margin-top: 10px;
+            color: #1d2b3a;
+        }
 
-    .reply {
-        background: white;
-        padding: 16px;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        margin-bottom: 14px;
-        line-height: 1.5;
-    }
+        /* Replies */
+        .replies {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 0 14px;
+        }
 
-    /* Reply box */
-    .reply-box {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 14px;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.06);
-        display: flex;
-        gap: 10px;
-    }
+        .reply {
+            background: white;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 14px;
+            line-height: 1.4;
+        }
 
-    .reply-box input {
-        flex: 1;
-        padding: 12px;
-        border: 1px solid #d9e0e6;
-        border-radius: 10px;
-        font-size: 14px;
-        outline: none;
-    }
+        .reply-user {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
 
-    .reply-btn {
-        background: #1d2b3a;
-        color: white;
-        border: none;
-        padding: 12px 16px;
-        border-radius: 10px;
-        font-size: 14px;
-        cursor: pointer;
-    }
+        /* Reply box */
+        .reply-box {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 14px 18px;
+            border-top: 1px solid #d9e0e6;
+            display: flex;
+            gap: 10px;
+        }
 
-    /* Bottom nav */
-    .nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        border-top: 1px solid #d9e0e6;
-        display: flex;
-        justify-content: space-around;
-        padding: 12px 0;
-        font-size: 13px;
-    }
+        .reply-box textarea {
+            flex: 1;
+            resize: none;
+            height: 50px;
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid #d4dce3;
+            background: #f8fafc;
+            font-size: 14px;
+        }
 
-    .nav a {
-        color: #4c5c6b;
-        text-decoration: none;
-    }
-
-    .nav a.active {
-        color: #1d2b3a;
-        font-weight: 600;
-    }
-</style>
+        .send-btn {
+            background: #1d2b3a;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+        }
+    </style>
 </head>
 
-<body>
+<body onload="loadThread()">
 
-<div class="header">Thread</div>
+    <div class="header">
+        Thread
+        <div class="sub">A calm conversation space</div>
+    </div>
 
-<!-- MAIN POST -->
-<div class="main-post">
-    A quiet moment under soft morning light.  
-    <div class="tag">Nature</div>
-</div>
+    <!-- Main post -->
+    <div class="main-post" id="mainPost">
+        Loading...
+    </div>
 
-<!-- REPLIES -->
-<div class="replies" id="replyContainer">
+    <!-- Replies -->
+    <div class="replies" id="repliesList">
+        <!-- Replies load here -->
+    </div>
 
-    <div class="reply">This feels peaceful.</div>
-    <div class="reply">Love the softness here.</div>
-
-</div>
-
-<!-- REPLY INPUT -->
-<div class="reply-box">
-    <input id="replyInput" type="text" placeholder="Write a reply...">
-    <button class="reply-btn" id="sendReply">Send</button>
-</div>
-
-<!-- BOTTOM NAV -->
-<div class="nav" style="bottom: 60px;">
-    <a href="feed.html" class="active">Home</a>
-    <a href="post.html">Post</a>
-    <a href="prefs.html">Prefs</a>
-    <a href="profile.html">Profile</a>
-</div>
-
-<script>
-// Load draft reply from localStorage
-const input = document.getElementById('replyInput');
-input.value = localStorage.getItem('draftReply') || "";
-
-// Save draft while typing
-input.addEventListener('input', () => {
-    localStorage.setItem('draftReply', input.value);
-});
-
-// Handle posting (static for MVP)
-document.getElementById('sendReply').addEventListener('click', () => {
-    const text = input.value.trim();
-    if (text.length === 0) return;
-
-    const div = document.createElement('div');
-    div.className = "reply";
-    div.textContent = text;
-
-    document.getElementById('replyContainer').appendChild(div);
-
-    input.value = "";
-    localStorage.removeItem('draftReply');
-});
-</script>
+    <!-- Reply input bar -->
+    <div class="reply-box">
+        <textarea id="replyInput" placeholder="Write a reply..."></textarea>
+        <button class="send-btn" onclick="createReply()">Send</button>
+    </div>
 
 </body>
 </html>
