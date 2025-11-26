@@ -122,18 +122,19 @@
     <div class="container">
 
         <!-- TEXT POST -->
-        <div class="card">
-            <div class="section-title">Text Post</div>
-            <textarea placeholder="Write something..."></textarea>
-            <a href="feed.html" class="post-btn">Post</a>
-        </div>
+<div class="card">
+    <div class="section-title">Text Post</div>
+    <textarea id="textPostInput" placeholder="Write something..."></textarea>
+    <button class="post-btn" onclick="createTextPost()">Post</button>
+</div>
 
-        <!-- PHOTO POST -->
-        <div class="card">
-            <div class="section-title">Photo Post</div>
-            <input type="file" accept="image/*" />
-            <a href="feed.html" class="post-btn">Post</a>
-        </div>
+<!-- PHOTO POST -->
+<div class="card">
+    <div class="section-title">Photo Post</div>
+    <input type="file" id="photoInput" accept="image/*" />
+    <button class="post-btn" onclick="createPhotoPost()">Post</button>
+</div>
+
 
     </div>
 
@@ -144,6 +145,10 @@
         <a href="prefs.html">Prefs</a>
         <a href="profile.html">Profile</a>
     </div>
+<script type="module">
+    import { loadFeed } from "./script.js";
+    loadFeed();
+</script>
 
 </body>
 </html>
