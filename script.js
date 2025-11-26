@@ -43,7 +43,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Analytics can throw in unsupported environments, so guard it.
+let analytics = null;
+try {
+  analytics = getAnalytics(app);
+} catch (e) {
+  console.warn("Analytics not initialized:", e?.message || e);
+}
 
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -106,11 +113,12 @@ export function signOutUser() {
 }
 
 // ---------------------------------------------------------------------
-// PROFILE LOADING / UPDATING (profile.html)
+// PROFILE LOADING / UPDATING (profile.html, legacy IDs supported too)
 // ---------------------------------------------------------------------
 export function loadProfile() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      // If not signed in, send them to index (or signup, your choice)
       window.location.href = "index.html";
       return;
     }
@@ -136,7 +144,7 @@ export function loadProfile() {
       avatarImgEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
     }
 
-    // Old IDs, in case any page still uses them
+    // Old IDs (if any pages still use them)
     const nameEl = document.getElementById("name");
     const emailEl = document.getElementById("email");
     const avatarEl = document.getElementById("avatar");
@@ -210,7 +218,7 @@ export async function updateDisplayName() {
 }
 
 // ---------------------------------------------------------------------
-// MOOD (mood.html + small helper on other pages)
+// MOOD (mood.html + harmless helper on other pages)
 // ---------------------------------------------------------------------
 export function selectMood(mood) {
   localStorage.setItem("currentMood", mood);
@@ -224,15 +232,21 @@ export function loadMood() {
 }
 
 // Run on all pages, harmless if #focusText is missing
-document.addEventListener("DOMContentLoaded", loadMood);
+document.addEventListener("DOMContentLoaded", () => {
+  loadMood();
+});
 
 // ---------------------------------------------------------------------
 // CREATE POSTS (post.html)
 // ---------------------------------------------------------------------
 export async function createTextPost() {
   const input = document.getElementById("textPostInput");
-  const text = input.value.trim();
+  if (!input) {
+    alert("Missing text input on this page.");
+    return;
+  }
 
+  const text = input.value.trim();
   if (!text) return alert("Write something first.");
 
   const user = auth.currentUser;
@@ -257,6 +271,11 @@ export async function createTextPost() {
 
 export async function createPhotoPost() {
   const input = document.getElementById("photoPostInput");
+  if (!input) {
+    alert("Missing photo input on this page.");
+    return;
+  }
+
   if (!input.files.length) return alert("Upload a photo first.");
 
   const file = input.files[0];
@@ -339,11 +358,12 @@ export async function loadFeed() {
 }
 
 // Run on all pages, but no-op if #feedContainer is missing
-document.addEventListener("DOMContentLoaded", loadFeed);
+document.addEventListener("DOMContentLoaded", () => {
+  loadFeed();
+});
 
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
-// Schema assumption:
 // Collection: threads
 // Doc: { content: string, tag?: string, created, userId }
 // Subcollection: threads/{threadId}/replies with
