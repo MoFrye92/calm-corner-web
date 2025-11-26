@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preferences</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 24px 20px 14px;
+            background: #f4f6f8;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-sub {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-top: 4px;
+        }
+
+        /* Main content */
+        .container {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+            margin-bottom: 18px;
+        }
+
+        .pref-item {
+            padding: 14px 0;
+            font-size: 15px;
+            font-weight: 500;
+            border-bottom: 1px solid #e2e6ea;
+        }
+
+        .pref-item:last-child {
+            border-bottom: none;
+        }
+
+        .pref-item a {
+            text-decoration: none;
+            color: #1d2b3a;
+        }
+
+        .logout {
+            color: #b33a3a;
+            font-weight: 600;
+        }
+
+        /* Bottom navigation */
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 14px 0 20px;
+            border-top: 1px solid #d9e0e6;
+            background: white;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #4c5c6b;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .nav a.active {
+            color: #1d2b3a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-title">Preferences</div>
+        <div class="header-sub">Adjust your experience.</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+
+        <div class="card">
+            <div class="pref-item"><a href="mood.html">Change Mood</a></div>
+            <div class="pref-item"><a href="topics.html">Mute Topics</a></div>
+            <div class="pref-item"><a href="#">Account Settings</a></div>
+            <div class="pref-item"><a class="logout" href="index.html">Log Out</a></div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="nav">
+        <a href="feed.html">Home</a>
+        <a href="post.html">Post</a>
+        <a class="active" href="prefs.html">Prefs</a>
+        <a href="profile.html">Profile</a>
+    </div>
+
+</body>
+</html>
