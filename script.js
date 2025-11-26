@@ -32,3 +32,87 @@ function loadMood() {
 
 // Run on page load
 document.addEventListener("DOMContentLoaded", loadMood);
+// Firestore + Storage references
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+const db = getFirestore();
+const storage = getStorage();
+
+/* ---------------------------
+   TEXT POST
+---------------------------- */
+export async function createTextPost() {
+    const input = document.getElementById("textPostInput");
+    const text = input.value.trim();
+
+    if (!text) {
+        alert("Write something first.");
+        return;
+    }
+
+    await addDoc(collection(db, "posts"), {
+        type: "text",
+        content: text,
+        created: serverTimestamp()
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
+}
+
+/* ---------------------------
+   PHOTO POST
+---------------------------- */
+export async function createPhotoPost() {
+    const fileInput = document.getElementById("photoInput");
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert("Pick a photo first.");
+        return;
+    }
+
+    // Upload to Firebase Storage
+    const storageRef = ref(storage, "photos/" + Date.now() + "-" + file.name);
+    const uploadResult = await uploadBytes(storageRef, file);
+
+    // Get public image URL
+    const url = await getDownloadURL(uploadResult.ref);
+
+    // Save post to Firestore
+    await addDoc(collection(db, "posts"), {
+        type: "photo",
+        imageUrl: url,
+        created: serverTimestamp()
+    });
+
+    fileInput.value = "";
+    window.location.href = "feed.html";
+}
+// FEED PAGE
+export async function loadFeed() {
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
+
+    const q = collection(db, "posts");
+    const snapshot = await getDocs(q);
+
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        let el = document.createElement("div");
+        el.classList.add("post");
+
+        if (data.type === "text") {
+            el.textContent = data.content;
+        }
+
+        if (data.type === "photo") {
+            el.innerHTML = `<img src='${data.imageUrl}' style='width:100%; border-radius:12px;' />`;
+        }
+
+        container.appendChild(el);
+    });
+}
+
+
