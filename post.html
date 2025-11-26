@@ -2,29 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <title>Create a Post – A Calm Corner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create a Post</title>
 
-    <!-- Load Firebase + global app logic -->
+    <!-- Firebase app logic -->
     <script type="module" src="script.js"></script>
 
     <style>
+        :root {
+            --bg: #f4f6f8;
+            --card: #ffffff;
+            --text-main: #1d2b3a;
+            --text-soft: #4c5c6b;
+            --accent: #1d2b3a;
+            --border-subtle: #dce2ea;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            background: #f4f6f8;
-            color: #1d2b3a;
+            background: var(--bg);
+            color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            padding-bottom: 96px; /* space for bottom nav */
         }
 
+        /* Header */
         .header {
             padding: 24px 20px 14px;
             background: #f4f6f8;
             position: sticky;
             top: 0;
-            z-index: 2;
+            z-index: 5;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .header-title {
@@ -34,141 +51,309 @@
 
         .header-sub {
             font-size: 14px;
-            color: #4c5c6b;
+            color: var(--text-soft);
             margin-top: 4px;
         }
 
         .container {
-            padding: 20px;
+            padding: 20px 18px 24px;
             flex: 1;
+            max-width: 480px;
+            margin: 0 auto;
         }
 
         .card {
-            background: white;
-            padding: 20px;
-            border-radius: 20px;
+            background: var(--card);
+            padding: 18px 18px 16px;
+            border-radius: var(--radius-lg);
             box-shadow: 0 10px 24px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .section-title {
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+        }
+
+        .section-sub {
+            font-size: 13px;
+            color: var(--text-soft);
+            margin-bottom: 14px;
         }
 
         textarea {
             width: 100%;
-            height: 120px;
+            height: 130px;
             padding: 14px;
             border-radius: 12px;
             border: 1px solid #d5dce3;
             font-size: 14px;
             background: #f9fafb;
-            resize: none;
+            resize: vertical;
+            outline: none;
         }
 
-        input[type="file"] {
-            margin-top: 10px;
+        textarea:focus {
+            border-color: var(--accent);
+            background: #ffffff;
         }
 
-        .btn {
-            background: #1d2b3a;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 12px;
+        .field-label {
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .tag-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .tag-row select {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 999px;
+            border: 1px solid #d5dce3;
+            background: #f9fafb;
+            outline: none;
+        }
+
+        .tag-row select:focus {
+            border-color: var(--accent);
+            background: #ffffff;
+        }
+
+        .tag-preview-pill {
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: 11px;
+            background: #e8ecf2;
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tag-preview-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: #8ba3c4;
+        }
+
+        .actions-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .primary-btn,
+        .secondary-btn {
+            flex: 1;
+            border-radius: 999px;
+            padding: 11px 14px;
+            font-size: 14px;
+            font-weight: 500;
             border: none;
-            font-size: 15px;
             cursor: pointer;
-            margin-top: 12px;
-            width: 100%;
         }
 
-        /* Bottom navigation */
-        .nav {
+        .primary-btn {
+            background: var(--accent);
+            color: #ffffff;
+        }
+
+        .primary-btn:active {
+            transform: scale(0.98);
+        }
+
+        .secondary-btn {
+            background: #e2e8f0;
+            color: var(--text-main);
+        }
+
+        .file-input-row {
+            margin-top: 6px;
+        }
+
+        .file-input-row input[type="file"] {
+            width: 100%;
+            font-size: 12px;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: var(--text-soft);
+            margin-top: 6px;
+        }
+
+        /* -----------------------------
+           Bottom Tab Bar (iOS-style)
+        ------------------------------ */
+        .tab-bar-shell {
             position: fixed;
-            bottom: 0;
             left: 0;
             right: 0;
-            background: white;
-            border-top: 1px solid #d9e0e6;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0 10px;
-            font-size: 12px;
+            bottom: 0;
+            padding: 6px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+            background: transparent;
             z-index: 20;
         }
 
-        .nav a {
+        .tab-bar {
+            max-width: 480px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.25);
+            padding: 8px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tab-link {
+            flex: 1;
             text-decoration: none;
-            color: #4c5c6b;
-            text-align: center;
-            font-size: 13px;
+            color: #64748b;
+            font-size: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 3px;
         }
 
-        .nav a .icon {
+        .tab-icon {
             font-size: 18px;
+            line-height: 1;
         }
 
-        .nav a.active {
-            color: #1d2b3a;
+        .tab-link span {
+            letter-spacing: 0.02em;
+        }
+
+        .tab-link.active {
+            color: var(--accent);
             font-weight: 600;
+        }
+
+        .tab-link.active .tab-icon {
+            transform: translateY(-1px);
         }
     </style>
 </head>
 
 <body>
+    <header class="header">
+        <div class="header-title">Create a post</div>
+        <div class="header-sub">Jot down what’s on your mind in a gentle way.</div>
+    </header>
 
-    <div class="header">
-        <div class="header-title">Create a Post</div>
-        <div class="header-sub">Share something calming</div>
+    <main class="container">
+        <!-- Text post card -->
+        <section class="card">
+            <div class="section-title">Write something</div>
+            <div class="section-sub">A short note, reflection, or check-in.</div>
+
+            <label for="textPostInput" class="field-label">Your words</label>
+            <textarea id="textPostInput" placeholder="“Today I’m feeling…”"></textarea>
+
+            <div class="field-label" style="margin-top: 14px;">Tag your post</div>
+            <div class="tag-row">
+                <select id="tagSelect">
+                    <option value="Reflection" selected>Reflection</option>
+                    <option value="Gratitude">Gratitude</option>
+                    <option value="Check-in">Check-in</option>
+                    <option value="Tiny win">Tiny win</option>
+                    <option value="Support needed">Support needed</option>
+                </select>
+
+                <div class="tag-preview-pill">
+                    <span class="tag-preview-dot"></span>
+                    <span id="tagPreviewLabel">Reflection</span>
+                </div>
+            </div>
+
+            <div class="hint">
+                The tag helps organize your feed and can show up as a little chip on your post.
+            </div>
+
+            <div class="actions-row">
+                <button class="secondary-btn" type="button" onclick="window.location.href='feed.html'">
+                    Cancel
+                </button>
+                <button class="primary-btn" type="button" onclick="createTextPost()">
+                    Post
+                </button>
+            </div>
+        </section>
+
+        <!-- Photo post card -->
+        <section class="card">
+            <div class="section-title">Share a photo</div>
+            <div class="section-sub">A calming view, a cozy corner, or anything that feels grounding.</div>
+
+            <label class="field-label" for="photoPostInput">Choose a photo</label>
+            <div class="file-input-row">
+                <input id="photoPostInput" type="file" accept="image/*" />
+            </div>
+
+            <div class="hint">
+                Photos will also use the tag you selected above, if you choose to save it that way in your script.
+            </div>
+
+            <div class="actions-row">
+                <button class="secondary-btn" type="button" onclick="window.location.href='feed.html'">
+                    Back
+                </button>
+                <button class="primary-btn" type="button" onclick="createPhotoPost()">
+                    Post photo
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom iOS-style tab bar -->
+    <div class="tab-bar-shell">
+        <nav class="tab-bar">
+            <a href="feed.html" class="tab-link">
+                <div class="tab-icon">🏠</div>
+                <span>Home</span>
+            </a>
+            <a href="post.html" class="tab-link active">
+                <div class="tab-icon">✍️</div>
+                <span>New</span>
+            </a>
+            <a href="topics.html" class="tab-link">
+                <div class="tab-icon">🌱</div>
+                <span>Topics</span>
+            </a>
+            <a href="prefs.html" class="tab-link">
+                <div class="tab-icon">🎧</div>
+                <span>Prefs</span>
+            </a>
+            <a href="profile.html" class="tab-link">
+                <div class="tab-icon">👤</div>
+                <span>Profile</span>
+            </a>
+        </nav>
     </div>
 
-    <div class="container">
+    <script>
+        // Tiny helper so the tag preview pill mirrors the dropdown
+        const tagSelect = document.getElementById('tagSelect');
+        const tagPreview = document.getElementById('tagPreviewLabel');
 
-        <!-- TEXT POST -->
-        <div class="card">
-            <div class="section-title">Write Something</div>
-            <textarea id="textPostInput" placeholder="Share a calm thought..."></textarea>
-            <button class="btn" onclick="createTextPost()">Post Text</button>
-        </div>
-
-        <!-- PHOTO POST -->
-        <div class="card">
-            <div class="section-title">Share a Photo</div>
-            <input id="photoPostInput" type="file" accept="image/*" />
-            <button class="btn" onclick="createPhotoPost()">Upload Photo</button>
-        </div>
-
-    </div>
-
-    <!-- NAV -->
-    <div class="nav">
-        <a href="feed.html">
-            <span class="icon">🏠</span>
-            <span>Home</span>
-        </a>
-        <a href="post.html" class="active">
-            <span class="icon">✍️</span>
-            <span>Post</span>
-        </a>
-        <a href="topics.html">
-            <span class="icon">🧩</span>
-            <span>Topics</span>
-        </a>
-        <a href="message.html">
-            <span class="icon">💬</span>
-            <span>Messages</span>
-        </a>
-        <a href="profile.html">
-            <span class="icon">👤</span>
-            <span>Profile</span>
-        </a>
-    </div>
-
+        if (tagSelect && tagPreview) {
+            tagSelect.addEventListener('change', () => {
+                tagPreview.textContent = tagSelect.value;
+            });
+        }
+    </script>
 </body>
 </html>
