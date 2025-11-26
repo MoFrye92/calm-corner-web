@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>A Calm Corner</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 1.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 15px;
+            color: #4c5c6b;
+            margin-bottom: 40px;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #1d2b3a;
+            color: white;
+            border-radius: 14px;
+            font-size: 15px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .start-btn:hover {
+            opacity: 0.85;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="logo">A Calm Corner</div>
+        <div class="tagline">A quieter way to share.</div>
+
+        <a href="signup.html" class="start-btn">Start</a>
+    </div>
+</body>
+</html>
