@@ -236,3 +236,24 @@ export async function loadFeed() {
 }
 
 document.addEventListener("DOMContentLoaded", loadFeed);
+export function loadProfile() {
+    const user = auth.currentUser;
+    if (!user) {
+        window.location.href = "signup.html";
+        return;
+    }
+
+    document.getElementById("name").textContent = user.displayName || "Anonymous User";
+    document.getElementById("email").textContent = user.email || "";
+    document.getElementById("avatar").src = user.photoURL || "default.png";
+}
+
+export function editProfile() {
+    alert("Profile editing coming soon!");
+}
+
+export function signOutUser() {
+    auth.signOut().then(() => {
+        window.location.href = "index.html";
+    });
+}
