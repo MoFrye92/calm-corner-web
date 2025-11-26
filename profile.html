@@ -106,70 +106,42 @@
 
         #avatarInput {
             display: none;
-            .nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 1px solid #d9e0e6;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 10px;
-  font-size: 12px;
-  z-index: 20;
-}
-
-.nav a {
-  color: #4c5c6b;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.nav a .icon {
-  font-size: 18px;
-}
-
-.nav a.active {
-  font-weight: 600;
-  color: #1d2b3a;
         }
-            .nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 1px solid #d9e0e6;
-  display: flex;
-  justify-content: space-around;
-  padding: 12px 0;
-  font-size: 13px;
-}
 
-.nav a {
-  color: #4c5c6b;
-  text-decoration: none;
-}
+        /* Bottom nav */
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #d9e0e6;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            font-size: 13px;
+            z-index: 20;
+        }
 
-.nav a.active {
-  font-weight: 600;
-  color: #1d2b3a;
+        .nav a {
+            color: #4c5c6b;
+            text-decoration: none;
+        }
+
+        .nav a.active {
+            font-weight: 600;
+            color: #1d2b3a;
+        }
     </style>
 </head>
 
 <body onload="loadProfile()">
-
     <div class="header">
         <div class="header-title">Your Profile</div>
         <div class="header-sub">Manage your information</div>
     </div>
 
     <div class="container">
-
         <div class="profile-card">
             <img id="avatarImg" class="avatar" src="default.png" alt="Profile Picture" />
 
@@ -196,12 +168,14 @@
                 <a href="#" onclick="logoutUser()">Log Out</a>
             </div>
         </div>
-        <div class="nav">
-  <a href="feed.html">🏠 Home</a>
-  <a href="post.html">✍️ Post</a>
-  <a href="topics.html">🍀 Topics</a>
-  <a href="message.html">💬 Messages</a>
-  <a href="profile.html" class="active">👤 Profile</a>
-</div>
+    </div>
+
+    <div class="nav">
+        <a href="feed.html">🏠 Home</a>
+        <a href="post.html">✍️ Post</a>
+        <a href="topics.html">🍀 Topics</a>
+        <a href="message.html">💬 Messages</a>
+        <a href="profile.html" class="active">👤 Profile</a>
+    </div>
 </body>
 </html>
