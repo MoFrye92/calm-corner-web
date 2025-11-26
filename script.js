@@ -472,6 +472,13 @@ export async function createReply() {
     alert("No thread selected.");
     return;
   }
+  // Attach login handler on login page
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", loginUser);
+  }
+});
 
   try {
     const threadRef = doc(db, "threads", threadId);
