@@ -5,7 +5,7 @@
     <title>Select Mood</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Global Firebase App Logic -->
+    <!-- Load Firebase + app logic -->
     <script type="module" src="script.js"></script>
 
     <style>
@@ -62,27 +62,35 @@
             font-weight: 600;
             font-size: 16px;
         }
+
+        .focus-body {
+            font-size: 14px;
+            color: #4c5c6b;
+            line-height: 1.5;
+        }
     </style>
 </head>
 
 <body>
+    <h1>How are you feeling?</h1>
+    <div class="subtitle">
+        Choose a mood to shape what you see today.
+    </div>
 
-    <h1>Select Your Mood</h1>
-    <div class="subtitle">Choose how you're feeling today</div>
-
+    <!-- Mood choices -->
     <div class="mood-grid">
-        <div class="mood" onclick="selectMood('Calm')">😌 Calm</div>
-        <div class="mood" onclick="selectMood('Happy')">😊 Happy</div>
-        <div class="mood" onclick="selectMood('Focused')">🎯 Focused</div>
-        <div class="mood" onclick="selectMood('Tired')">😴 Tired</div>
-        <div class="mood" onclick="selectMood('Stressed')">😣 Stressed</div>
-        <div class="mood" onclick="selectMood('Grateful')">🙏 Grateful</div>
+        <div class="mood" onclick="selectMood('Calm')">Calm</div>
+        <div class="mood" onclick="selectMood('Overwhelmed')">Overwhelmed</div>
+        <div class="mood" onclick="selectMood('Anxious')">Anxious</div>
+        <div class="mood" onclick="selectMood('Hopeful')">Hopeful</div>
     </div>
 
+    <!-- Focus area (used by loadMood() via #focusText) -->
     <div class="focus-section">
-        <div class="focus-title">Today's Focus</div>
-        <div id="focusText">Tap a mood above</div>
+        <div class="focus-title">Today’s focus</div>
+        <div class="focus-body" id="focusText">
+            Pick a mood above to set your focus.
+        </div>
     </div>
-
 </body>
 </html>
