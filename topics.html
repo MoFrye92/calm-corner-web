@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mute Topics</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            padding: 24px 20px 14px;
+            background: #f4f6f8;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-sub {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-top: 4px;
+        }
+
+        /* Main content */
+        .container {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            padding: 18px;
+            border-radius: 18px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+        }
+
+        .topic {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            font-size: 15px;
+            border-bottom: 1px solid #e2e6ea;
+        }
+
+        .topic:last-child {
+            border-bottom: none;
+        }
+
+        /* Toggle switches */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 22px;
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #c8d0d8;
+            transition: 0.2s;
+            border-radius: 22px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+
+        input:checked + .slider {
+            background: #1d2b3a;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Bottom navigation */
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 14px 0 20px;
+            border-top: 1px solid #d9e0e6;
+            background: white;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #4c5c6b;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .nav a.active {
+            color: #1d2b3a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-title">Mute Topics</div>
+        <div class="header-sub">Hide categories that feel heavy or distracting.</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="card">
+
+            <div class="topic">
+                <span>Politics</span>
+                <label class="switch">
+                    <input type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="topic">
+                <span>Drama</span>
+                <label class="switch">
+                    <input type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="topic">
+                <span>Traumatic News</span>
+                <label class="switch">
+                    <input type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="topic">
+                <span>Relationship Negativity</span>
+                <label class="switch">
+                    <input type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="topic">
+                <span>Celebrity Gossip</span>
+                <label class="switch">
+                    <input type="checkbox" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="nav">
+        <a href="feed.html">Home</a>
+        <a href="post.html">Post</a>
+        <a href="prefs.html">Prefs</a>
+        <a class="active" href="profile.html">Profile</a>
+    </div>
+
+</body>
+</html>
