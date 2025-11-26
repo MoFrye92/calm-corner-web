@@ -5,7 +5,7 @@
     <title>Sign Up</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Load Firebase + app logic -->
+    <!-- Load Firebase + App Logic -->
     <script type="module" src="script.js"></script>
 
     <style>
@@ -62,32 +62,26 @@
 
         .start-btn {
             margin-top: 20px;
-            display: block;
             width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
             background: #1d2b3a;
             color: white;
-            padding: 14px 0;
-            border-radius: 12px;
             font-size: 15px;
-            text-align: center;
             cursor: pointer;
-            text-decoration: none;
-            transition: opacity 0.2s;
         }
 
-        .start-btn:hover {
-            opacity: 0.85;
-        }
-
-        .link {
-            margin-top: 16px;
-            font-size: 13px;
+        .login-link {
+            margin-top: 18px;
+            display: block;
+            font-size: 14px;
             color: #4c5c6b;
             text-decoration: none;
         }
 
-        .link:hover {
-            text-decoration: underline;
+        .login-link:hover {
+            color: #1d2b3a;
         }
     </style>
 </head>
@@ -95,19 +89,19 @@
 <body>
 
     <h1>Create Account</h1>
-    <div class="subtitle">Start your calmer space.</div>
+    <div class="subtitle">Join the calm corner community</div>
 
     <div class="form">
         <label>Email</label>
-        <input type="email" id="emailInput" placeholder="you@example.com" />
+        <input id="emailInput" type="email" placeholder="you@example.com" />
 
         <label>Password</label>
-        <input type="password" id="passwordInput" placeholder="••••••••" />
+        <input id="passwordInput" type="password" placeholder="••••••••" />
 
-        <a href="mood.html" class="start-btn">Continue</a>
+        <button class="start-btn" onclick="signUpUser()">Sign Up</button>
     </div>
 
-    <a href="index.html" class="link">Back</a>
+    <a class="login-link" href="index.html">Already have an account? Log in</a>
 
 </body>
 </html>
