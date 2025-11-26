@@ -1,6 +1,6 @@
-// ======================================================================
-//  Firebase Setup
-// ======================================================================
+// ------------------------------------------------------
+// Firebase Setup
+// ------------------------------------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
@@ -44,157 +44,140 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-getAnalytics(app);
+const analytics = getAnalytics(app);
 
-const db = getFirestore(app);
-const auth = getAuth(app);
-const storage = getStorage(app);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export const storage = getStorage(app);
 
-// ======================================================================
-//  AUTH — Sign Up, Login, Logout
-// ======================================================================
+// ------------------------------------------------------
+// AUTH
+// ------------------------------------------------------
 export async function signUpUser() {
-    const email = document.getElementById("emailInput").value.trim();
-    const pass = document.getElementById("passwordInput").value.trim();
+    const email = document.getElementById("emailInput").value;
+    const pass = document.getElementById("passwordInput").value;
 
-    try {
-        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
-        const uid = userCred.user.uid;
+    const userCred = await createUserWithEmailAndPassword(auth, email, pass);
 
-        await setDoc(doc(db, "users", uid), {
-            displayName: email.split("@")[0],
-            email: email,
-            avatarUrl: "",
-            darkMode: false
-        });
+    // Default profile
+    await setDoc(doc(db, "users", userCred.user.uid), {
+        displayName: email.split("@")[0],
+        email: email,
+        avatarUrl: "",
+        bio: "",
+        darkMode: false
+    });
 
-        window.location.href = "mood.html";
-    } catch (err) {
-        alert(err.message);
-    }
+    window.location.href = "mood.html";
 }
 
 export async function loginUser() {
-    const email = document.getElementById("loginEmail").value.trim();
-    const pass = document.getElementById("loginPassword").value.trim();
+    const email = document.getElementById("loginEmail").value;
+    const pass = document.getElementById("loginPassword").value;
 
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-        window.location.href = "feed.html";
-    } catch (err) {
-        alert(err.message);
-    }
+    await signInWithEmailAndPassword(auth, email, pass);
+    window.location.href = "feed.html";
 }
 
-export function logoutUser() {
-    signOut(auth);
-    window.location.href = "index.html";
+export function signOutUser() {
+    signOut(auth).then(() => (window.location.href = "index.html"));
 }
 
-// ======================================================================
-//  DARK MODE — Save, Load, Apply
-// ======================================================================
-export async function saveDarkMode(uid, isDark) {
-    await setDoc(doc(db, "users", uid), { darkMode: isDark }, { merge: true });
-}
-
-export async function loadDarkMode(uid) {
-    const snapshot = await getDoc(doc(db, "users", uid));
-    const data = snapshot.data();
-
-    const enabled = data?.darkMode === true;
-
-    document.documentElement.classList.toggle("dark", enabled);
-
-    return enabled;
-}
-
-export async function toggleDarkMode() {
-    const user = auth.currentUser;
-    if (!user) return;
-
-    const current = document.documentElement.classList.contains("dark");
-    const newValue = !current;
-
-    document.documentElement.classList.toggle("dark", newValue);
-    await saveDarkMode(user.uid, newValue);
-}
-
-// ======================================================================
-//  PROFILE — Load, Edit, Avatar Upload
-// ======================================================================
+// ------------------------------------------------------
+// PROFILE LOADING
+// ------------------------------------------------------
 export function loadProfile() {
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-            window.location.href = "index.html";
-            return;
-        }
-
-        // apply theme
-        loadDarkMode(user.uid);
+    onAuthStateChanged(auth, async user => {
+        if (!user) return (window.location.href = "index.html");
 
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const data = userDoc.data();
 
-        document.getElementById("displayName").textContent = data.displayName;
-        document.getElementById("emailField").textContent = data.email;
+        // Fill UI
+        document.getElementById("name").textContent = data.displayName;
+        document.getElementById("email").textContent = data.email;
+        document.getElementById("avatar").src =
+            data.avatarUrl || "default.png";
 
-        const avatar = document.getElementById("avatarImg");
-        avatar.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
-
-        // Bind avatar input
-        const avatarInput = document.getElementById("avatarInput");
-        if (avatarInput) {
-            avatarInput.onchange = () => uploadAvatar(user.uid, avatarInput.files[0]);
+        if (document.getElementById("bio")) {
+            document.getElementById("bio").textContent = data.bio || "";
         }
+
+        applyDarkMode(data.darkMode);
     });
 }
 
-export async function uploadAvatar(uid, file) {
-    if (!file) return alert("No file selected.");
-
-    const path = `avatars/${uid}_${Date.now()}.jpg`;
-    const storageRef = ref(storage, path);
-
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-
-    await setDoc(doc(db, "users", uid), { avatarUrl: url }, { merge: true });
-
-    document.getElementById("avatarImg").src = url;
-}
-
-export async function updateDisplayName() {
-    const newName = prompt("Enter your new name:");
-    if (!newName) return;
-
+// ------------------------------------------------------
+// EDIT PROFILE (name, avatar, bio)
+// ------------------------------------------------------
+export async function updateUserProfile() {
     const user = auth.currentUser;
     if (!user) return;
 
-    await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
-    await updateProfile(user, { displayName: newName });
+    const newName = document.getElementById("editName").value.trim();
+    const newBio = document.getElementById("editBio").value.trim();
+    const newAvatarFile = document.getElementById("editAvatar").files[0];
 
-    document.getElementById("displayName").textContent = newName;
+    let avatarUrl = null;
+
+    // Upload avatar (if selected)
+    if (newAvatarFile) {
+        const avatarRef = ref(storage, `avatars/${user.uid}.jpg`);
+        await uploadBytes(avatarRef, newAvatarFile);
+        avatarUrl = await getDownloadURL(avatarRef);
+    }
+
+    // Save to Firestore
+    await setDoc(
+        doc(db, "users", user.uid),
+        {
+            displayName: newName,
+            bio: newBio,
+            ...(avatarUrl && { avatarUrl })
+        },
+        { merge: true }
+    );
+
+    // Sync Firebase auth displayName (optional)
+    await updateProfile(user, {
+        displayName: newName,
+        ...(avatarUrl && { photoURL: avatarUrl })
+    });
+
+    window.location.href = "profile.html";
 }
 
-// ======================================================================
-//  MOOD — Save Local Mood
-// ======================================================================
-export function selectMood(mood) {
-    localStorage.setItem("currentMood", mood);
-    window.location.href = "feed.html";
+// ------------------------------------------------------
+// DARK MODE
+// ------------------------------------------------------
+export async function toggleDarkMode() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const current = userDoc.data().darkMode;
+
+    await setDoc(doc(db, "users", user.uid), { darkMode: !current }, { merge: true });
+
+    applyDarkMode(!current);
 }
 
-export function loadMood() {
-    const mood = localStorage.getItem("currentMood") || "Neutral";
-    const label = document.getElementById("focusText");
-    if (label) label.textContent = `Content for: ${mood}`;
-}
-document.addEventListener("DOMContentLoaded", loadMood);
+export function applyDarkMode(enabled) {
+    document.body.classList.toggle("dark", enabled);
 
-// ======================================================================
-//  POSTS — Create Text & Photo Posts
-// ======================================================================
+    // Save locally so pages look correct before Firestore loads
+    localStorage.setItem("darkMode", enabled);
+}
+
+(function preloadDarkMode() {
+    if (localStorage.getItem("darkMode") === "true") {
+        document.body.classList.add("dark");
+    }
+})();
+
+// ------------------------------------------------------
+// FEED + POSTS
+// ------------------------------------------------------
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
     const text = input.value.trim();
@@ -202,7 +185,6 @@ export async function createTextPost() {
     if (!text) return alert("Write something first.");
 
     const user = auth.currentUser;
-    if (!user) return alert("You must be logged in.");
 
     await addDoc(collection(db, "posts"), {
         type: "text",
@@ -215,77 +197,27 @@ export async function createTextPost() {
     window.location.href = "feed.html";
 }
 
-export async function createPhotoPost() {
-    const input = document.getElementById("photoPostInput");
-    if (!input.files.length) return alert("Upload a photo first.");
-
-    const file = input.files[0];
-    const user = auth.currentUser;
-
-    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
-
-    await addDoc(collection(db, "posts"), {
-        type: "photo",
-        imageUrl: url,
-        userId: user.uid,
-        created: serverTimestamp()
-    });
-
-    input.value = "";
-    window.location.href = "feed.html";
-}
-
-// ======================================================================
-//  FEED — Load Posts
-// ======================================================================
 export async function loadFeed() {
-    onAuthStateChanged(auth, async (user) => {
-        if (!user) return;
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
 
-        // Load theme
-        loadDarkMode(user.uid);
+    const postsQuery = query(collection(db, "posts"), orderBy("created", "desc"));
+    const snapshot = await getDocs(postsQuery);
 
-        const container = document.getElementById("feedContainer");
-        if (!container) return;
+    container.innerHTML = "";
 
-        const postsQuery = query(collection(db, "posts"), orderBy("created", "desc"));
-        const snapshot = await getDocs(postsQuery);
+    snapshot.forEach(postDoc => {
+        const post = postDoc.data();
+        const div = document.createElement("div");
+        div.className = "post";
 
-        container.innerHTML = "";
+        if (post.type === "text") {
+            div.innerHTML = `
+                <div class="postText">${post.content}</div>
+                <div class="tag">Reflection</div>
+            `;
+        }
 
-        snapshot.forEach(docData => {
-            const post = docData.data();
-            let div = document.createElement("div");
-            div.className = "post";
-
-            if (post.type === "text") {
-                div.innerHTML = `
-                    <div class="postText">${post.content}</div>
-                    <div class="tag">Reflection</div>
-                `;
-            }
-
-            if (post.type === "photo") {
-                div.innerHTML = `
-                    <img src="${post.imageUrl}" class="postPhoto">
-                    <div class="tag">Photography</div>
-                `;
-            }
-
-            container.appendChild(div);
-        });
-    });
-}
-
-document.addEventListener("DOMContentLoaded", loadFeed);
-
-// ======================================================================
-//  INDEX AUTO-REDIRECT (if already logged in)
-// ======================================================================
-export function checkAutoLogin() {
-    onAuthStateChanged(auth, (user) => {
-        if (user) window.location.href = "feed.html";
+        container.appendChild(div);
     });
 }
