@@ -6,21 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Preferences</title>
 
+    <script type="module" src="script.js"></script>
+
     <style>
         body {
             margin: 0;
-            background: #f4f6f8;
-            color: #1d2b3a;
+            background: var(--bg);
+            color: var(--text);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
         }
 
+        /* Light / Dark Mode Variables */
+        :root {
+            --bg: #f4f6f8;
+            --card: white;
+            --text: #1d2b3a;
+            --subtext: #4c5c6b;
+            --border: #e2e6ea;
+        }
+
+        body.dark {
+            --bg: #0e141a;
+            --card: #18222b;
+            --text: #e8edf2;
+            --subtext: #9aabb8;
+            --border: #2b3a44;
+        }
+
         /* Header */
         .header {
             padding: 24px 20px 14px;
-            background: #f4f6f8;
+            background: var(--bg);
             position: sticky;
             top: 0;
             z-index: 2;
@@ -33,7 +52,7 @@
 
         .header-sub {
             font-size: 14px;
-            color: #4c5c6b;
+            color: var(--subtext);
             margin-top: 4px;
         }
 
@@ -44,7 +63,7 @@
         }
 
         .card {
-            background: white;
+            background: var(--card);
             border-radius: 18px;
             padding: 18px;
             box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
@@ -55,7 +74,10 @@
             padding: 14px 0;
             font-size: 15px;
             font-weight: 500;
-            border-bottom: 1px solid #e2e6ea;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .pref-item:last-child {
@@ -63,7 +85,7 @@
         }
 
         .pref-item a {
-            color: #1d2b3a;
+            color: var(--text);
             text-decoration: none;
             transition: opacity 0.2s ease;
         }
@@ -71,10 +93,56 @@
         .pref-item a:hover {
             opacity: 0.7;
         }
+
+        /* Toggle switch */
+        .switch {
+            position: relative;
+            width: 46px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #bdc8d1;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: 0.25s;
+        }
+
+        input:checked + .slider {
+            background: #1d2b3a;
+        }
+
+        .slider::before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.25s;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
     </style>
 </head>
 
-<body>
+<body onload="loadPreferences()">
+
     <div class="header">
         <div class="header-title">Preferences</div>
         <div class="header-sub">Manage your Calm Corner settings</div>
@@ -83,22 +151,34 @@
     <div class="container">
 
         <div class="card">
+
             <div class="pref-item">
                 <a href="profile.html">Edit Profile</a>
             </div>
+
             <div class="pref-item">
                 <a href="mood.html">Change Mood</a>
             </div>
+
             <div class="pref-item">
                 <a href="topics.html">Customize Topics</a>
             </div>
+
+            <div class="pref-item">
+                Dark Mode
+                <label class="switch">
+                    <input type="checkbox" id="darkToggle" onchange="toggleDarkMode()" />
+                    <span class="slider"></span>
+                </label>
+            </div>
+
             <div class="pref-item">
                 <a href="index.html">Return Home</a>
             </div>
+
         </div>
 
     </div>
 
 </body>
-
 </html>
