@@ -112,6 +112,14 @@ export function signOutUser() {
   logoutUser();
 }
 
+// Attach login handler on login page (if button exists)
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", loginUser);
+  }
+});
+
 // ---------------------------------------------------------------------
 // PROFILE LOADING / UPDATING (profile.html, legacy IDs supported too)
 // ---------------------------------------------------------------------
@@ -307,94 +315,94 @@ export async function createPhotoPost() {
 // LOAD FEED – matches new feed.html structure
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-    const container = document.getElementById("feedContainer");
-    if (!container) return;
+  const container = document.getElementById("feedContainer");
+  if (!container) return;
 
-    const postsQuery = query(
-        collection(db, "posts"),
-        orderBy("created", "desc")
-    );
+  const postsQuery = query(
+    collection(db, "posts"),
+    orderBy("created", "desc")
+  );
 
-    const snapshot = await getDocs(postsQuery);
-    container.innerHTML = "";
+  const snapshot = await getDocs(postsQuery);
+  container.innerHTML = "";
 
-    snapshot.forEach(docSnap => {
-        const post = docSnap.data();
-        const postId = docSnap.id;
+  snapshot.forEach(docSnap => {
+    const post = docSnap.data();
+    const postId = docSnap.id;
 
-        // Basic type → label mapping
-        let tagLabel = "Reflection";
-        if (post.type === "photo") tagLabel = "Photography";
+    // Basic type → label mapping
+    let tagLabel = "Reflection";
+    if (post.type === "photo") tagLabel = "Photography";
 
-        // You can improve this later with real timestamps
-        const metaText = "You · just now";
+    // You can improve this later with real timestamps
+    const metaText = "You · just now";
 
-        const article = document.createElement("article");
-        article.className = "post";
-        article.dataset.postId = postId;
+    const article = document.createElement("article");
+    article.className = "post";
+    article.dataset.postId = postId;
 
-        // Header
-        const header = document.createElement("div");
-        header.className = "post-header";
+    // Header
+    const header = document.createElement("div");
+    header.className = "post-header";
 
-        const meta = document.createElement("div");
-        meta.className = "post-meta";
-        meta.textContent = metaText;
+    const meta = document.createElement("div");
+    meta.className = "post-meta";
+    meta.textContent = metaText;
 
-        const tag = document.createElement("div");
-        tag.className = "post-tag";
-        tag.innerHTML = `
-            <span class="post-tag-dot"></span>
-            <span class="post-tag-label">${tagLabel}</span>
-        `;
+    const tag = document.createElement("div");
+    tag.className = "post-tag";
+    tag.innerHTML = `
+      <span class="post-tag-dot"></span>
+      <span class="post-tag-label">${tagLabel}</span>
+    `;
 
-        header.appendChild(meta);
-        header.appendChild(tag);
+    header.appendChild(meta);
+    header.appendChild(tag);
 
-        // Content
-        if (post.type === "text") {
-            const textDiv = document.createElement("div");
-            textDiv.className = "postText";
-            textDiv.textContent = post.content || "";
-            article.appendChild(header);
-            article.appendChild(textDiv);
-        } else if (post.type === "photo") {
-            const img = document.createElement("img");
-            img.className = "postPhoto";
-            img.src = post.imageUrl;
-            img.alt = "Shared photo";
+    // Content
+    if (post.type === "text") {
+      const textDiv = document.createElement("div");
+      textDiv.className = "postText";
+      textDiv.textContent = post.content || "";
+      article.appendChild(header);
+      article.appendChild(textDiv);
+    } else if (post.type === "photo") {
+      const img = document.createElement("img");
+      img.className = "postPhoto";
+      img.src = post.imageUrl;
+      img.alt = "Shared photo";
 
-            article.appendChild(header);
-            article.appendChild(img);
-        } else {
-            // Unknown type – just skip
-            return;
-        }
+      article.appendChild(header);
+      article.appendChild(img);
+    } else {
+      // Unknown type – just skip
+      return;
+    }
 
-        // Footer (no real comments yet, just placeholder)
-        const footer = document.createElement("div");
-        footer.className = "post-footer";
+    // Footer (no real comments yet, just placeholder)
+    const footer = document.createElement("div");
+    footer.className = "post-footer";
 
-        const commentSummary = document.createElement("div");
-        commentSummary.className = "comment-summary";
-        commentSummary.textContent = "No comments yet";
+    const commentSummary = document.createElement("div");
+    commentSummary.className = "comment-summary";
+    commentSummary.textContent = "No comments yet";
 
-        const commentBtn = document.createElement("button");
-        commentBtn.className = "comment-toggle-btn";
-        commentBtn.textContent = "Comment";
+    const commentBtn = document.createElement("button");
+    commentBtn.className = "comment-toggle-btn";
+    commentBtn.textContent = "Comment";
 
-        // For now, send to thread page with ?id=POST_ID
-        commentBtn.addEventListener("click", () => {
-            window.location.href = `thread.html?post=${encodeURIComponent(postId)}`;
-        });
-
-        footer.appendChild(commentSummary);
-        footer.appendChild(commentBtn);
-
-        article.appendChild(footer);
-
-        container.appendChild(article);
+    // For now, send to thread page with ?id=POST_ID
+    commentBtn.addEventListener("click", () => {
+      window.location.href = `thread.html?id=${encodeURIComponent(postId)}`;
     });
+
+    footer.appendChild(commentSummary);
+    footer.appendChild(commentBtn);
+
+    article.appendChild(footer);
+
+    container.appendChild(article);
+  });
 }
 
 // ---------------------------------------------------------------------
@@ -472,13 +480,6 @@ export async function createReply() {
     alert("No thread selected.");
     return;
   }
-  // Attach login handler on login page
-document.addEventListener("DOMContentLoaded", () => {
-  const loginBtn = document.getElementById("loginBtn");
-  if (loginBtn) {
-    loginBtn.addEventListener("click", loginUser);
-  }
-});
 
   try {
     const threadRef = doc(db, "threads", threadId);
