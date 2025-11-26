@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create a Post</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 24px 20px 14px;
+            background: #f4f6f8;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .header-sub {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-top: 4px;
+        }
+
+        .container {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #d5dce3;
+            font-size: 14px;
+            background: #f9fafb;
+        }
+
+        input[type="file"] {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .post-btn {
+            display: block;
+            width: 100%;
+            padding: 14px 0;
+            background: #1d2b3a;
+            color: white;
+            text-align: center;
+            border-radius: 12px;
+            font-size: 15px;
+            text-decoration: none;
+            margin-top: 10px;
+            transition: opacity 0.2s ease;
+        }
+
+        .post-btn:hover {
+            opacity: 0.85;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 14px 0 20px;
+            border-top: 1px solid #d9e0e6;
+            background: white;
+            position: sticky;
+            bottom: 0;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #4c5c6b;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .nav a.active {
+            color: #1d2b3a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-title">Create a Post</div>
+        <div class="header-sub">Share something simple and calm.</div>
+    </div>
+
+    <div class="container">
+
+        <!-- TEXT POST -->
+        <div class="card">
+            <div class="section-title">Text Post</div>
+            <textarea placeholder="Write something..."></textarea>
+            <a href="feed.html" class="post-btn">Post</a>
+        </div>
+
+        <!-- PHOTO POST -->
+        <div class="card">
+            <div class="section-title">Photo Post</div>
+            <input type="file" accept="image/*" />
+            <a href="feed.html" class="post-btn">Post</a>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <div class="nav">
+        <a href="feed.html">Home</a>
+        <a class="active" href="post.html">Post</a>
+        <a href="prefs.html">Prefs</a>
+        <a href="profile.html">Profile</a>
+    </div>
+
+</body>
+</html>
