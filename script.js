@@ -1,51 +1,65 @@
-// --- Firebase Setup ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+// ---------------------------
+// Firebase Setup
+// ---------------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    serverTimestamp,
+    query,
+    orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
-  authDomain: "calm-corner-e92e0.firebaseapp.com",
-  projectId: "calm-corner-e92e0",
-  storageBucket: "calm-corner-e92e0.firebasestorage.app",
-  messagingSenderId: "470025194370",
-  appId: "1:470025194370:web:90830dd0951427b39a1d9b",
-  measurementId: "G-HBC6NHQF19"
+    apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
+    authDomain: "calm-corner-e92e0.firebaseapp.com",
+    projectId: "calm-corner-e92e0",
+    storageBucket: "calm-corner-e92e0.firebasestorage.app",
+    messagingSenderId: "470025194370",
+    appId: "1:470025194370:web:90830dd0951427b39a1d9b",
+    measurementId: "G-HBC6NHQF19"
 };
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-
-
-// Save mood on click
-function selectMood(mood) {
+// ---------------------------
+// Mood Selection
+// ---------------------------
+export function selectMood(mood) {
     localStorage.setItem("currentMood", mood);
     window.location.href = "feed.html";
 }
 
-// Load mood on feed page
-function loadMood() {
+export function loadMood() {
     const mood = localStorage.getItem("currentMood") || "Neutral";
-    const moodLabel = document.getElementById("current-mood");
-    if (moodLabel) moodLabel.textContent = mood;
+    const label = document.getElementById("focusText");
+    if (label) label.textContent = `Content for: ${mood}`;
 }
 
-// Run on page load
 document.addEventListener("DOMContentLoaded", loadMood);
-// Firestore + Storage references
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-const db = getFirestore();
-const storage = getStorage();
-
-/* ---------------------------
-   TEXT POST
----------------------------- */
+// ---------------------------
+// Create Text Post
+// ---------------------------
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
-    const text = input.value.trim();
+    if (!input) return;
 
+    const text = input.value.trim();
     if (!text) {
         alert("Write something first.");
         return;
@@ -61,26 +75,26 @@ export async function createTextPost() {
     window.location.href = "feed.html";
 }
 
-/* ---------------------------
-   PHOTO POST
----------------------------- */
+// ---------------------------
+// Create Photo Post
+// ---------------------------
 export async function createPhotoPost() {
-    const fileInput = document.getElementById("photoInput");
-    const file = fileInput.files[0];
-
-    if (!file) {
-        alert("Pick a photo first.");
+    const fileInput = document.getElementById("photoPostInput");
+    if (!fileInput || !fileInput.files.length) {
+        alert("Upload a photo first.");
         return;
     }
 
-    // Upload to Firebase Storage
-    const storageRef = ref(storage, "photos/" + Date.now() + "-" + file.name);
-    const uploadResult = await uploadBytes(storageRef, file);
+    const file = fileInput.files[0];
+    const storageRef = ref(storage, `photos/${Date.now()}_${file.name}`);
 
-    // Get public image URL
-    const url = await getDownloadURL(uploadResult.ref);
+    // upload to storage
+    await uploadBytes(storageRef, file);
 
-    // Save post to Firestore
+    // get URL
+    const url = await getDownloadURL(storageRef);
+
+    // save post entry
     await addDoc(collection(db, "posts"), {
         type: "photo",
         imageUrl: url,
@@ -90,29 +104,44 @@ export async function createPhotoPost() {
     fileInput.value = "";
     window.location.href = "feed.html";
 }
-// FEED PAGE
+
+// ---------------------------
+// Load Posts on Feed
+// ---------------------------
 export async function loadFeed() {
     const container = document.getElementById("feedContainer");
     if (!container) return;
 
-    const q = collection(db, "posts");
-    const snapshot = await getDocs(q);
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
+
+    const snapshot = await getDocs(postsQuery);
+
+    container.innerHTML = ""; // clear existing
 
     snapshot.forEach(doc => {
-        const data = doc.data();
-        let el = document.createElement("div");
-        el.classList.add("post");
+        const post = doc.data();
+        let div = document.createElement("div");
+        div.className = "post";
 
-        if (data.type === "text") {
-            el.textContent = data.content;
+        if (post.type === "text") {
+            div.innerHTML = `
+                <div class="postText">${post.content}</div>
+                <div class="tag">Reflection</div>
+            `;
         }
 
-        if (data.type === "photo") {
-            el.innerHTML = `<img src='${data.imageUrl}' style='width:100%; border-radius:12px;' />`;
+        if (post.type === "photo") {
+            div.innerHTML = `
+                <img src="${post.imageUrl}" class="postPhoto" />
+                <div class="tag">Photography</div>
+            `;
         }
 
-        container.appendChild(el);
+        container.appendChild(div);
     });
 }
 
-
+document.addEventListener("DOMContentLoaded", loadFeed);
