@@ -3,7 +3,6 @@
 // ---------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
-
 import {
   getFirestore,
   collection,
@@ -113,7 +112,6 @@ export function loadProfile() {
 
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
-
     const data = userSnap.exists()
       ? userSnap.data()
       : {
@@ -130,8 +128,7 @@ export function loadProfile() {
     if (nameEl) nameEl.textContent = data.displayName || "Anonymous";
     if (emailEl) emailEl.textContent = data.email || user.email || "";
     if (avatarEl) {
-      avatarEl.src =
-        data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
+      avatarEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
     }
 
     if (avatarInput) {
@@ -177,6 +174,7 @@ export async function updateDisplayName() {
       { displayName: newName },
       { merge: true }
     );
+
     await updateProfile(user, { displayName: newName });
 
     const nameEl = document.getElementById("displayName");
@@ -243,7 +241,10 @@ export async function createPhotoPost() {
   if (!user) return alert("You must be logged in.");
 
   try {
-    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    const storageRef = ref(
+      storage,
+      `posts/${Date.now()}_${file.name}`
+    );
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
 
@@ -274,7 +275,6 @@ export async function loadFeed() {
       collection(db, "posts"),
       orderBy("created", "desc")
     );
-
     const snapshot = await getDocs(postsQuery);
     container.innerHTML = "";
 
@@ -310,10 +310,10 @@ document.addEventListener("DOMContentLoaded", loadFeed);
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
 // Schema assumption:
-//   Collection: threads
-//   Doc: { content: string, tag?: string, created, userId }
-//   Subcollection: threads/{threadId}/replies with
-//     { text, userId, displayName?, created }
+// Collection: threads
+// Doc: { content: string, tag?: string, created, userId }
+// Subcollection: threads/{threadId}/replies with
+// { text, userId, displayName?, created }
 // ---------------------------------------------------------------------
 function getThreadIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
@@ -344,11 +344,7 @@ export async function loadThread() {
 
     mainPostEl.innerHTML = `
       <div>${data.content || ""}</div>
-      ${
-        data.tag
-          ? `<div class="tag">${data.tag}</div>`
-          : ""
-      }
+      ${data.tag ? `<div class="tag">${data.tag}</div>` : ""}
     `;
 
     const repliesRef = collection(threadRef, "replies");
@@ -360,7 +356,6 @@ export async function loadThread() {
       const reply = replyDoc.data();
       const div = document.createElement("div");
       div.className = "reply";
-
       const name = reply.displayName || "Someone";
       div.innerHTML = `
         <div class="reply-user">${name}</div>
@@ -377,6 +372,7 @@ export async function loadThread() {
 export async function createReply() {
   const textarea = document.getElementById("replyInput");
   const text = textarea?.value.trim();
+
   if (!text) return alert("Write a reply first.");
 
   const user = auth.currentUser;
@@ -413,15 +409,11 @@ export async function createReply() {
 window.signUpUser = signUpUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;
-
 window.loadProfile = loadProfile;
 window.updateDisplayName = updateDisplayName;
-
 window.selectMood = selectMood;
-
 window.createTextPost = createTextPost;
 window.createPhotoPost = createPhotoPost;
 window.loadFeed = loadFeed;
-
 window.loadThread = loadThread;
 window.createReply = createReply;
