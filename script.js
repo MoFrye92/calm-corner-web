@@ -54,8 +54,8 @@ const storage = getStorage(app);
 // AUTH FUNCTIONS
 // ---------------------------------------------------------------------
 export async function signUpUser() {
-    const email = document.getElementById("emailInput")?.value;
-    const pass = document.getElementById("passwordInput")?.value;
+    const email = document.getElementById("emailInput").value;
+    const pass = document.getElementById("passwordInput").value;
 
     if (!email || !pass) {
         alert("Please enter an email and password.");
@@ -72,11 +72,15 @@ export async function signUpUser() {
             avatarUrl: "",
         });
 
+        // ✅ go to mood.html after successful signup
         window.location.href = "mood.html";
     } catch (err) {
         alert(err.message);
     }
 }
+
+// ✅ expose to global scope so HTML onclick can see it
+window.signUpUser = signUpUser;
 
 export async function loginUser() {
     const email = document.getElementById("loginEmail")?.value;
