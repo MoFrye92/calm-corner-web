@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Preferences</title>
 
+    <!-- Load Firebase + app logic -->
     <script type="module" src="script.js"></script>
 
     <style>
@@ -22,7 +23,7 @@
         /* Light / Dark Mode Variables */
         :root {
             --bg: #f4f6f8;
-            --card: white;
+            --card: #ffffff;
             --text: #1d2b3a;
             --subtext: #4c5c6b;
             --border: #e2e6ea;
@@ -135,7 +136,7 @@
             transition: 0.25s;
         }
 
-        input:checked + .slider:before {
+        input:checked + .slider::before {
             transform: translateX(22px);
         }
     </style>
