@@ -5,87 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>A Calm Corner</title>
 
-    <style>
-        body {
-            margin: 0;
-            background: #f4f6f8;
-            color: #1d2b3a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                Helvetica, Arial, sans-serif;
-            padding: 20px;
-        }
-
-        .cc-card {
-            background: white;
-            border-radius: 20px;
-            padding: 22px 20px 20px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-            max-width: 420px;
-            margin: 40px auto;
-        }
-
-        .cc-card-header {
-            margin-bottom: 12px;
-        }
-
-        .cc-card-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        .cc-card-sub {
-            font-size: 14px;
-            color: #4c5c6b;
-        }
-
-        .cc-card-body {
-            font-size: 15px;
-            color: #263445;
-            line-height: 1.5;
-            margin-bottom: 18px;
-        }
-
-        .cc-card-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .cc-btn {
-            display: inline-block;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-size: 15px;
-            text-decoration: none;
-            background: #1d2b3a;
-            color: white;
-            transition: opacity 0.2s ease;
-        }
-
-        .cc-btn:hover {
-            opacity: 0.88;
-        }
-    </style>
+    <!-- global theme + components CSS -->
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
-<body>
-    <div class="cc-card">
-        <div class="cc-card-header">
-            <div class="cc-card-title">A calm corner just for you</div>
-            <div class="cc-card-sub">
+<body class="theme-light">
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">A calm corner just for you</div>
+            <div class="card-sub">
                 Take a moment to check in, feel grounded, or share your thoughts.
             </div>
         </div>
 
-        <div class="cc-card-body">
+        <div class="card-body">
             This gentle space is meant to support reflection, mood tracking,
             and your own emotional grounding. When you’re ready, you can create
             a post and share what’s on your mind.
         </div>
 
-        <div class="cc-card-footer">
-            <a href="post.html" class="cc-btn">Create a post</a>
+        <div class="card-footer">
+            <a href="post.html" class="btn-primary">Create a post</a>
         </div>
     </div>
+
 </body>
 </html>
