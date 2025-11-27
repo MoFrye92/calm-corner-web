@@ -260,9 +260,38 @@ export async function createPhotoPost() {
 // ---------------------------------------------------------------------
 // LOAD FEED
 // ---------------------------------------------------------------------
+// Helper: nice human-readable time
+function formatPostTime(created) {
+    try {
+        if (!created) return "just now";
+
+        const date = created.toDate ? created.toDate() : new Date(created);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMinutes = Math.floor(diffMs / 60000);
+
+        if (diffMinutes < 1) return "just now";
+        if (diffMinutes < 60) {
+            return `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} ago`;
+        }
+
+        const diffHours = Math.floor(diffMinutes / 60);
+        if (diffHours < 24) {
+            return `${diffHours} hr${diffHours === 1 ? "" : "s"} ago`;
+        }
+
+        return date.toLocaleDateString();
+    } catch (e) {
+        return "recently";
+    }
+}
+
+// Main feed loader for feed.html
 export async function loadFeed() {
     const container = document.getElementById("feedContainer");
-    if (!container) return; // Not on the feed page
+    if (!container) return; // only run on feed.html
+
+    container.innerHTML = "";
 
     const postsQuery = query(
         collection(db, "posts"),
@@ -270,36 +299,172 @@ export async function loadFeed() {
     );
 
     const snapshot = await getDocs(postsQuery);
-    container.innerHTML = "";
 
-    snapshot.forEach((docData) => {
-        const post = docData.data();
-        const div = document.createElement("div");
-        div.className = "post";
+    if (snapshot.empty) {
+        const empty = document.createElement("div");
+        empty.textContent = "Nothing here yet. Your first note could go here.";
+        empty.style.fontSize = "13px";
+        empty.style.color = "#64748b";
+        container.appendChild(empty);
+        return;
+    }
 
+    snapshot.forEach(docSnap => {
+        const post = docSnap.data();
+        const postId = docSnap.id;
+
+        const article = document.createElement("article");
+        article.className = "post";
+        article.dataset.postId = postId;
+
+        const tagLabel = post.type === "photo" ? "Photography" : "Reflection";
+        const createdLabel = formatPostTime(post.created);
+
+        article.innerHTML = `
+            <div class="post-header">
+                <div class="post-meta">You · ${createdLabel}</div>
+                <div class="post-tag">
+                    <span class="post-tag-dot"></span>
+                    <span class="post-tag-label">${tagLabel}</span>
+                </div>
+            </div>
+
+            ${
+                post.type === "photo"
+                    ? `<img src="${post.imageUrl}" alt="" class="postPhoto" />`
+                    : `<div class="postText"></div>`
+            }
+
+            <div class="post-footer">
+                <div class="comment-summary">No comments yet</div>
+                <button class="comment-toggle-btn" type="button">Comment</button>
+            </div>
+
+            <div class="comments" style="display:none;">
+                <div class="comments-list"></div>
+                <div class="add-comment-row">
+                    <input
+                        class="add-comment-input"
+                        type="text"
+                        placeholder="Add a gentle reply…"
+                    />
+                    <button class="add-comment-btn" type="button">Send</button>
+                </div>
+            </div>
+        `;
+
+        // Avoid injecting text as HTML
         if (post.type === "text") {
-            div.innerHTML = `
-                <div class="postText">${post.content}</div>
-                <div class="tag">Reflection</div>
-            `;
-        } else if (post.type === "photo") {
-            div.innerHTML = `
-                <img src="${post.imageUrl}" class="postPhoto" />
-                <div class="tag">Photography</div>
-            `;
+            const textEl = article.querySelector(".postText");
+            if (textEl) textEl.textContent = post.content || "";
         }
 
-        container.appendChild(div);
+        container.appendChild(article);
+
+        // wire up comments for this post
+        setupCommentsForPost(postId, article);
     });
 }
 
-// Auto-run feed loading only on pages that have #feedContainer
-document.addEventListener("DOMContentLoaded", () => {
-    const container = document.getElementById("feedContainer");
-    if (container) {
-        loadFeed().catch(console.error);
+// still auto-run on page load
+document.addEventListener("DOMContentLoaded", loadFeed);
+// Load & wire comments for a single post
+async function setupCommentsForPost(postId, articleEl) {
+    const commentsContainer = articleEl.querySelector(".comments");
+    const commentsList = articleEl.querySelector(".comments-list");
+    const summaryEl = articleEl.querySelector(".comment-summary");
+    const toggleBtn = articleEl.querySelector(".comment-toggle-btn");
+    const inputEl = articleEl.querySelector(".add-comment-input");
+    const sendBtn = articleEl.querySelector(".add-comment-btn");
+
+    if (
+        !commentsContainer ||
+        !commentsList ||
+        !summaryEl ||
+        !toggleBtn ||
+        !inputEl ||
+        !sendBtn
+    ) {
+        return;
     }
-});
+
+    // Pull comments from Firestore: posts/{postId}/comments
+    async function refreshComments() {
+        commentsList.innerHTML = "";
+
+        const commentsCol = collection(db, "posts", postId, "comments");
+        const commentsQuery = query(commentsCol, orderBy("created", "asc"));
+        const snap = await getDocs(commentsQuery);
+
+        let count = 0;
+        snap.forEach(docSnap => {
+            const c = docSnap.data();
+            const item = document.createElement("div");
+            item.className = "comment-item";
+
+            const author = c.authorName || "Someone";
+
+            item.innerHTML = `
+                <span class="comment-author">${author}</span>
+                <span>${c.text || ""}</span>
+            `;
+            commentsList.appendChild(item);
+            count++;
+        });
+
+        if (count === 0) {
+            summaryEl.textContent = "No comments yet";
+        } else if (count === 1) {
+            summaryEl.textContent = "1 gentle reply";
+        } else {
+            summaryEl.textContent = `${count} gentle replies`;
+        }
+    }
+
+    // Initial load
+    await refreshComments();
+
+    // Toggle show/hide
+    toggleBtn.addEventListener("click", () => {
+        const isOpen = commentsContainer.style.display === "block";
+        commentsContainer.style.display = isOpen ? "none" : "block";
+        toggleBtn.textContent = isOpen ? "Comment" : "Hide";
+    });
+
+    // Add new comment
+    async function sendComment() {
+        const text = inputEl.value.trim();
+        if (!text) return;
+
+        const user = auth.currentUser;
+
+        try {
+            await addDoc(collection(db, "posts", postId, "comments"), {
+                text,
+                userId: user ? user.uid : null,
+                authorName: user?.displayName || "You",
+                created: serverTimestamp()
+            });
+
+            inputEl.value = "";
+            await refreshComments();
+            commentsContainer.style.display = "block";
+            toggleBtn.textContent = "Hide";
+        } catch (err) {
+            console.error("Error adding comment", err);
+            alert("Could not add comment. Please try again.");
+        }
+    }
+
+    sendBtn.addEventListener("click", sendComment);
+
+    inputEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendComment();
+        }
+    });
+}
 
 // ---------------------------------------------------------------------
 // THREADS (main post + replies)
