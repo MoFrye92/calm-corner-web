@@ -117,7 +117,7 @@ export function signOutUser() {
 export function loadProfile() {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            // If no user, send them to signup or landing
+            // If no user, send them to signup
             window.location.href = "signup.html";
             return;
         }
@@ -139,8 +139,7 @@ export function loadProfile() {
 
         profileNameEl.textContent  = data.displayName || "Anonymous";
         profileEmailEl.textContent = data.email || user.email || "";
-
-        avatarImgEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
+        avatarImgEl.src            = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
 
         if (avatarInputEl) {
             avatarInputEl.onchange = () => {
@@ -185,6 +184,11 @@ export async function updateDisplayName() {
     if (profileNameEl) profileNameEl.textContent = newName;
 }
 
+// simple stub so window.editProfile works
+export function editProfile() {
+    alert("Profile editing coming soon!");
+}
+
 // ---------------------------------------------------------------------
 // MOOD
 // ---------------------------------------------------------------------
@@ -209,21 +213,24 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------------------------------------------------------------------
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
-    const text = input.value.trim();
+    if (!input) {
+        alert("Post input not found.");
+        return;
+    }
 
+    const text = input.value.trim();
     if (!text) return alert("Write something first.");
 
     const user = auth.currentUser;
     if (!user) return alert("You must be logged in.");
 
-    // NEW: grab current mood
     const mood = localStorage.getItem("currentMood") || "Neutral";
 
     await addDoc(collection(db, "posts"), {
         type: "text",
         content: text,
         userId: user.uid,
-        mood: mood,                // 🔹 save mood
+        mood,
         created: serverTimestamp()
     });
 
@@ -233,7 +240,7 @@ export async function createTextPost() {
 
 export async function createPhotoPost() {
     const input = document.getElementById("photoPostInput");
-    if (!input.files.length) return alert("Upload a photo first.");
+    if (!input || !input.files.length) return alert("Upload a photo first.");
 
     const file = input.files[0];
     const user = auth.currentUser;
@@ -243,14 +250,13 @@ export async function createPhotoPost() {
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
 
-    // NEW: grab current mood
     const mood = localStorage.getItem("currentMood") || "Neutral";
 
     await addDoc(collection(db, "posts"), {
         type: "photo",
         imageUrl: url,
         userId: user.uid,
-        mood: mood,                // 🔹 save mood
+        mood,
         created: serverTimestamp(),
     });
 
@@ -261,7 +267,6 @@ export async function createPhotoPost() {
 // ---------------------------------------------------------------------
 // LOAD FEED
 // ---------------------------------------------------------------------
-// Helper: nice human-readable time
 function formatPostTime(created) {
     try {
         if (!created) return "just now";
@@ -288,7 +293,6 @@ function formatPostTime(created) {
     }
 }
 
-// Main feed loader for feed.html
 export async function loadFeed() {
     const container = document.getElementById("feedContainer");
     if (!container) return;
@@ -360,7 +364,6 @@ export async function loadFeed() {
                 </div>
             `;
 
-            // Avoid injecting text as HTML
             if (post.type === "text") {
                 const textEl = article.querySelector(".postText");
                 if (textEl) textEl.textContent = post.content || "";
@@ -382,10 +385,12 @@ export async function loadFeed() {
     }
 }
 
-// Auto-run on page load (safe: returns early if #feedContainer not present)
+// Only does something on pages with #feedContainer
 document.addEventListener("DOMContentLoaded", loadFeed);
 
-// Load & wire comments for a single post
+// ---------------------------------------------------------------------
+// COMMENTS
+// ---------------------------------------------------------------------
 async function setupCommentsForPost(postId, articleEl) {
     const commentsContainer = articleEl.querySelector(".comments");
     const commentsList = articleEl.querySelector(".comments-list");
@@ -405,7 +410,6 @@ async function setupCommentsForPost(postId, articleEl) {
         return;
     }
 
-    // Pull comments from Firestore: posts/{postId}/comments
     async function refreshComments() {
         commentsList.innerHTML = "";
 
@@ -443,17 +447,14 @@ async function setupCommentsForPost(postId, articleEl) {
         }
     }
 
-    // Initial load
     await refreshComments();
 
-    // Toggle show/hide
     toggleBtn.addEventListener("click", () => {
         const isOpen = commentsContainer.style.display === "block";
         commentsContainer.style.display = isOpen ? "none" : "block";
         toggleBtn.textContent = isOpen ? "Comment" : "Hide";
     });
 
-    // Add new comment
     async function sendComment() {
         const text = inputEl.value.trim();
         if (!text) return;
@@ -493,10 +494,6 @@ async function setupCommentsForPost(postId, articleEl) {
 // ---------------------------------------------------------------------
 const THEME_KEY = "calmTheme";
 
-/**
- * Apply the saved theme (light/dark) to the current page.
- * This runs on every page that loads script.js.
- */
 export function applySavedTheme() {
     const saved = localStorage.getItem(THEME_KEY) || "light";
     if (saved === "dark") {
@@ -506,13 +503,8 @@ export function applySavedTheme() {
     }
 }
 
-// Run theme application on every page load
 document.addEventListener("DOMContentLoaded", applySavedTheme);
 
-/**
- * Called by prefs.html body onload.
- * Ensures theme is applied and syncs the toggle checkbox state.
- */
 export function loadPreferences() {
     applySavedTheme();
     const toggle = document.getElementById("darkToggle");
@@ -521,10 +513,6 @@ export function loadPreferences() {
     }
 }
 
-/**
- * Called when the Dark Mode switch is toggled on prefs.html.
- * Flips the theme and saves preference to localStorage.
- */
 export function toggleDarkMode() {
     const nowDark = !document.body.classList.contains("dark");
     if (nowDark) {
@@ -535,7 +523,6 @@ export function toggleDarkMode() {
         localStorage.setItem(THEME_KEY, "light");
     }
 
-    // keep checkbox in sync in case it's called programmatically
     const toggle = document.getElementById("darkToggle");
     if (toggle) {
         toggle.checked = nowDark;
@@ -563,7 +550,6 @@ export async function loadThread() {
     }
 
     try {
-        // Load the main post
         const postRef = doc(db, "posts", threadId);
         const postSnap = await getDoc(postRef);
 
@@ -581,14 +567,12 @@ export async function loadThread() {
                 <div class="tag">${post.tag || "Photography"}</div>
             `;
         } else {
-            // default to text post
             mainPost.innerHTML = `
                 <div>${post.content || ""}</div>
                 <div class="tag">${post.tag || "Reflection"}</div>
             `;
         }
 
-        // Load replies
         const repliesRef = collection(db, "posts", threadId, "replies");
         const repliesQ = query(repliesRef, orderBy("created", "asc"));
         const repliesSnap = await getDocs(repliesQ);
@@ -655,24 +639,13 @@ export async function createReply() {
         });
 
         input.value = "";
-        await loadThread(); // refresh replies
+        await loadThread();
     } catch (err) {
         console.error(err);
         alert("Couldn't send your reply. Please try again.");
     }
 }
-// Make functions available to inline HTML event handlers
-window.signUpUser   = signUpUser;
-window.loginUser    = loginUser;
-window.logoutUser   = logoutUser;
 
-window.selectMood   = selectMood;
-window.createTextPost  = createTextPost;
-window.createPhotoPost = createPhotoPost;
-
-window.loadProfile  = loadProfile;
-window.editProfile  = editProfile;
-window.signOutUser  = signOutUser;
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
@@ -680,13 +653,18 @@ window.signUpUser        = signUpUser;
 window.loginUser         = loginUser;
 window.logoutUser        = logoutUser;
 window.signOutUser       = signOutUser;
+
 window.selectMood        = selectMood;
 window.createTextPost    = createTextPost;
 window.createPhotoPost   = createPhotoPost;
+
 window.loadFeed          = loadFeed;
 window.loadProfile       = loadProfile;
 window.updateDisplayName = updateDisplayName;
+window.editProfile       = editProfile;
+
 window.loadThread        = loadThread;
 window.createReply       = createReply;
+
 window.loadPreferences   = loadPreferences;
 window.toggleDarkMode    = toggleDarkMode;
