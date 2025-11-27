@@ -598,7 +598,63 @@ export async function createReply() {
     input.value = "";
     await loadThread();
 }
+// ---------------------------------------------------------------------
+// THEME / PREFERENCES (Dark Mode)
+// ---------------------------------------------------------------------
+const THEME_KEY = "calmTheme";
 
+/**
+ * Apply the saved theme (light/dark) to the current page.
+ * This runs on every page that loads script.js.
+ */
+export function applySavedTheme() {
+    const saved = localStorage.getItem(THEME_KEY) || "light";
+    if (saved === "dark") {
+        document.body.classList.add("dark");
+    } else {
+        document.body.classList.remove("dark");
+    }
+}
+
+// Run theme application on every page load
+document.addEventListener("DOMContentLoaded", applySavedTheme);
+
+/**
+ * Called by prefs.html body onload.
+ * Ensures theme is applied and syncs the toggle checkbox state.
+ */
+export function loadPreferences() {
+    applySavedTheme();
+    const toggle = document.getElementById("darkToggle");
+    if (toggle) {
+        toggle.checked = document.body.classList.contains("dark");
+    }
+}
+
+/**
+ * Called when the Dark Mode switch is toggled on prefs.html.
+ * Flips the theme and saves preference to localStorage.
+ */
+export function toggleDarkMode() {
+    const nowDark = !document.body.classList.contains("dark");
+    if (nowDark) {
+        document.body.classList.add("dark");
+        localStorage.setItem(THEME_KEY, "dark");
+    } else {
+        document.body.classList.remove("dark");
+        localStorage.setItem(THEME_KEY, "light");
+    }
+
+    // keep checkbox in sync in case it's called programmatically
+    const toggle = document.getElementById("darkToggle");
+    if (toggle) {
+        toggle.checked = nowDark;
+    }
+}
+
+// Make functions available to inline HTML handlers despite type="module"
+window.loadPreferences = loadPreferences;
+window.toggleDarkMode = toggleDarkMode;
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
