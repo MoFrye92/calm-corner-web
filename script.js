@@ -96,9 +96,14 @@ export async function loginUser() {
 }
 
 export function logoutUser() {
-    signOut(auth).then(() => {
-        window.location.href = "index.html";
-    });
+    signOut(auth)
+        .then(() => {
+            window.location.href = "index.html";
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Could not log out. Please try again.");
+        });
 }
 
 // Backwards-compatible alias if any HTML still calls signOutUser()
@@ -112,7 +117,8 @@ export function signOutUser() {
 export function loadProfile() {
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
-            window.location.href = "index.html";
+            // If no user, send them to signup or landing
+            window.location.href = "signup.html";
             return;
         }
 
@@ -193,7 +199,7 @@ export function loadMood() {
     if (label) label.textContent = `Content for: ${mood}`;
 }
 
-// Run loadMood on any page that happens to have #focusText
+// Run loadMood on pages that have #focusText
 document.addEventListener("DOMContentLoaded", () => {
     loadMood();
 });
@@ -363,7 +369,7 @@ export async function loadFeed() {
     });
 }
 
-// still auto-run on page load (safe: returns early if #feedContainer not present)
+// Auto-run on page load (safe: returns early if #feedContainer not present)
 document.addEventListener("DOMContentLoaded", loadFeed);
 
 // Load & wire comments for a single post
