@@ -202,24 +202,24 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------------------------------------------------------------------
 // CREATE POSTS
 // ---------------------------------------------------------------------
+
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
-    const text = input?.value.trim();
+    const text = input?.value.trim() || "";
 
-    if (!text) {
-        alert("Write something first.");
-        return;
-    }
+    if (!text) return alert("Write something first.");
 
     const user = auth.currentUser;
-    if (!user) {
-        alert("You must be logged in.");
-        return;
-    }
+    if (!user) return alert("You must be logged in.");
+
+    // Pull tag from the selector on post.html
+    const tagSelect = document.getElementById("tagSelect");
+    const tag = tagSelect && tagSelect.value ? tagSelect.value : "Reflection";
 
     await addDoc(collection(db, "posts"), {
         type: "text",
         content: text,
+        tag: tag,
         userId: user.uid,
         created: serverTimestamp()
     });
@@ -227,28 +227,26 @@ export async function createTextPost() {
     input.value = "";
     window.location.href = "feed.html";
 }
-
 export async function createPhotoPost() {
     const input = document.getElementById("photoPostInput");
-    if (!input || !input.files.length) {
-        alert("Upload a photo first.");
-        return;
-    }
+    if (!input || !input.files.length) return alert("Upload a photo first.");
 
     const file = input.files[0];
     const user = auth.currentUser;
-    if (!user) {
-        alert("You must be logged in.");
-        return;
-    }
+    if (!user) return alert("You must be logged in.");
 
     const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
 
+    // Use the same tag selector as the text post
+    const tagSelect = document.getElementById("tagSelect");
+    const tag = tagSelect && tagSelect.value ? tagSelect.value : "Reflection";
+
     await addDoc(collection(db, "posts"), {
         type: "photo",
         imageUrl: url,
+        tag: tag,
         userId: user.uid,
         created: serverTimestamp(),
     });
@@ -289,14 +287,40 @@ function formatPostTime(created) {
 // Main feed loader for feed.html
 export async function loadFeed() {
     const container = document.getElementById("feedContainer");
-    if (!container) return; // only run on feed.html
-
-    container.innerHTML = "";
+    if (!container) return;
 
     const postsQuery = query(
         collection(db, "posts"),
         orderBy("created", "desc")
     );
+
+    const snapshot = await getDocs(postsQuery);
+    container.innerHTML = "";
+
+    snapshot.forEach(docData => {
+        const post = docData.data();
+        const tagLabel = post.tag || (post.type === "photo" ? "Photography" : "Reflection");
+
+        let div = document.createElement("div");
+        div.className = "post";
+
+        if (post.type === "text") {
+            div.innerHTML = `
+                <div class="postText">${post.content}</div>
+                <div class="tag">${tagLabel}</div>
+            `;
+        }
+
+        if (post.type === "photo") {
+            div.innerHTML = `
+                <img src="${post.imageUrl}" class="postPhoto"/>
+                <div class="tag">${tagLabel}</div>
+            `;
+        }
+
+        container.appendChild(div);
+    });
+}
 
     const snapshot = await getDocs(postsQuery);
 
