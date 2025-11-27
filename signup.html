@@ -87,21 +87,19 @@
 </head>
 
 <body>
-
-    <h1>Create Account</h1>
-    <div class="subtitle">Join the calm corner community</div>
+    <h1>Welcome to A Calm Corner</h1>
+    <div class="subtitle">Create your account to save your posts and moods.</div>
 
     <div class="form">
-        <label>Email</label>
+        <label for="emailInput">Email</label>
         <input id="emailInput" type="email" placeholder="you@example.com" />
 
-        <label>Password</label>
-        <input id="passwordInput" type="password" placeholder="••••••••" />
+        <label for="passwordInput">Password</label>
+        <input id="passwordInput" type="password" placeholder="At least 6 characters" />
 
-        <button class="start-btn" onclick="signUpUser()">Create account</button>
+        <button class="start-btn" type="button" onclick="signUpUser()">
+            Continue
+        </button>
     </div>
-
-    <a class="login-link" href="login.html">Already have an account? Log in</a>
-
 </body>
 </html>
