@@ -661,7 +661,18 @@ export async function createReply() {
         alert("Couldn't send your reply. Please try again.");
     }
 }
+// Make functions available to inline HTML event handlers
+window.signUpUser   = signUpUser;
+window.loginUser    = loginUser;
+window.logoutUser   = logoutUser;
 
+window.selectMood   = selectMood;
+window.createTextPost  = createTextPost;
+window.createPhotoPost = createPhotoPost;
+
+window.loadProfile  = loadProfile;
+window.editProfile  = editProfile;
+window.signOutUser  = signOutUser;
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
