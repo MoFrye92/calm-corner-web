@@ -172,21 +172,24 @@ export async function updateDisplayName() {
         return;
     }
 
+    // Update Firestore user document
     await setDoc(
         doc(db, "users", user.uid),
         { displayName: newName },
         { merge: true }
     );
 
+    // Update Firebase Auth profile
     await updateProfile(user, { displayName: newName });
 
+    // Update on-page UI if element exists
     const profileNameEl = document.getElementById("displayName");
     if (profileNameEl) profileNameEl.textContent = newName;
 }
 
-// simple stub so window.editProfile works
+// allow onclick="editProfile()" in HTML
 export function editProfile() {
-    alert("Profile editing coming soon!");
+    return updateDisplayName();
 }
 
 // ---------------------------------------------------------------------
