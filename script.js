@@ -14,8 +14,7 @@ import {
     getDocs,
     serverTimestamp,
     query,
-    orderBy,
-    limit
+    orderBy
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -108,7 +107,7 @@ export function signOutUser() {
 }
 
 // ---------------------------------------------------------------------
-// PROFILE LOADING / UPDATING  (single, clean version)
+// PROFILE LOADING / UPDATING
 // ---------------------------------------------------------------------
 export function loadProfile() {
     onAuthStateChanged(auth, async (user) => {
@@ -202,7 +201,6 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------------------------------------------------------------------
 // CREATE POSTS
 // ---------------------------------------------------------------------
-
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
     const text = input?.value.trim() || "";
@@ -227,6 +225,7 @@ export async function createTextPost() {
     input.value = "";
     window.location.href = "feed.html";
 }
+
 export async function createPhotoPost() {
     const input = document.getElementById("photoPostInput");
     if (!input || !input.files.length) return alert("Upload a photo first.");
@@ -297,33 +296,6 @@ export async function loadFeed() {
     const snapshot = await getDocs(postsQuery);
     container.innerHTML = "";
 
-    snapshot.forEach(docData => {
-        const post = docData.data();
-        const tagLabel = post.tag || (post.type === "photo" ? "Photography" : "Reflection");
-
-        let div = document.createElement("div");
-        div.className = "post";
-
-        if (post.type === "text") {
-            div.innerHTML = `
-                <div class="postText">${post.content}</div>
-                <div class="tag">${tagLabel}</div>
-            `;
-        }
-
-        if (post.type === "photo") {
-            div.innerHTML = `
-                <img src="${post.imageUrl}" class="postPhoto"/>
-                <div class="tag">${tagLabel}</div>
-            `;
-        }
-
-        container.appendChild(div);
-    });
-}
-
-    const snapshot = await getDocs(postsQuery);
-
     if (snapshot.empty) {
         const empty = document.createElement("div");
         empty.textContent = "Nothing here yet. Your first note could go here.";
@@ -341,7 +313,8 @@ export async function loadFeed() {
         article.className = "post";
         article.dataset.postId = postId;
 
-        const tagLabel = post.type === "photo" ? "Photography" : "Reflection";
+        const tagLabel =
+            post.tag || (post.type === "photo" ? "Photography" : "Reflection");
         const createdLabel = formatPostTime(post.created);
 
         article.innerHTML = `
@@ -390,8 +363,9 @@ export async function loadFeed() {
     });
 }
 
-// still auto-run on page load
+// still auto-run on page load (safe: returns early if #feedContainer not present)
 document.addEventListener("DOMContentLoaded", loadFeed);
+
 // Load & wire comments for a single post
 async function setupCommentsForPost(postId, articleEl) {
     const commentsContainer = articleEl.querySelector(".comments");
@@ -491,114 +465,6 @@ async function setupCommentsForPost(postId, articleEl) {
 }
 
 // ---------------------------------------------------------------------
-// THREADS (main post + replies)
-// Firestore structure:
-//   threads (collection)
-//     - threadId (doc) { title, body, tag, created, userId }
-//     - replies (subcollection)
-//         - replyId (doc) { text, userId, displayName, created }
-// ---------------------------------------------------------------------
-async function resolveThreadRef() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let threadId = urlParams.get("id");
-    let threadRef;
-
-    if (threadId) {
-        threadRef = doc(db, "threads", threadId);
-    } else {
-        // If no ?id= is provided, grab the most recent thread
-        const q = query(collection(db, "threads"), orderBy("created", "desc"), limit(1));
-        const snap = await getDocs(q);
-        if (snap.empty) return null;
-        const first = snap.docs[0];
-        threadId = first.id;
-        threadRef = first.ref;
-    }
-
-    window.currentThreadId = threadId;
-    return threadRef;
-}
-
-export async function loadThread() {
-    const mainPostEl   = document.getElementById("mainPost");
-    const repliesList  = document.getElementById("repliesList");
-
-    if (!mainPostEl || !repliesList) return; // Not on thread page
-
-    mainPostEl.innerHTML = "Loading…";
-    repliesList.innerHTML = "";
-
-    const threadRef = await resolveThreadRef();
-    if (!threadRef) {
-        mainPostEl.innerHTML = "No thread found yet.";
-        return;
-    }
-
-    const threadSnap = await getDoc(threadRef);
-    if (!threadSnap.exists()) {
-        mainPostEl.innerHTML = "That thread doesn't exist.";
-        return;
-    }
-
-    const thread = threadSnap.data();
-
-    mainPostEl.innerHTML = `
-        <div>${thread.title ? `<strong>${thread.title}</strong><br/><br/>` : ""}${thread.body || ""}</div>
-        ${thread.tag ? `<div class="tag">${thread.tag}</div>` : ""}
-    `;
-
-    // Load replies
-    const repliesQuery = query(
-        collection(threadRef, "replies"),
-        orderBy("created", "asc")
-    );
-    const repliesSnap = await getDocs(repliesQuery);
-    repliesList.innerHTML = "";
-
-    repliesSnap.forEach((replyDoc) => {
-        const r = replyDoc.data();
-        const div = document.createElement("div");
-        div.className = "reply";
-        div.innerHTML = `
-            <div class="reply-user">${r.displayName || "Someone"}</div>
-            <div>${r.text || ""}</div>
-        `;
-        repliesList.appendChild(div);
-    });
-}
-
-export async function createReply() {
-    const input = document.getElementById("replyInput");
-    if (!input) return;
-
-    const text = input.value.trim();
-    if (!text) return;
-
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You need to be logged in to reply.");
-        return;
-    }
-
-    const threadId = window.currentThreadId;
-    if (!threadId) {
-        alert("No thread selected.");
-        return;
-    }
-
-    const threadRef = doc(db, "threads", threadId);
-
-    await addDoc(collection(threadRef, "replies"), {
-        text,
-        userId: user.uid,
-        displayName: user.displayName || user.email || "Anonymous",
-        created: serverTimestamp()
-    });
-
-    input.value = "";
-    await loadThread();
-}
-// ---------------------------------------------------------------------
 // THEME / PREFERENCES (Dark Mode)
 // ---------------------------------------------------------------------
 const THEME_KEY = "calmTheme";
@@ -652,21 +518,140 @@ export function toggleDarkMode() {
     }
 }
 
-// Make functions available to inline HTML handlers despite type="module"
-window.loadPreferences = loadPreferences;
-window.toggleDarkMode = toggleDarkMode;
+// ---------------------------------------------------------------------
+// THREAD VIEW (single post + replies, based on posts/{id})
+// ---------------------------------------------------------------------
+function getThreadIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("id");
+}
+
+export async function loadThread() {
+    const mainPost = document.getElementById("mainPost");
+    const repliesList = document.getElementById("repliesList");
+    if (!mainPost || !repliesList) return;
+
+    const threadId = getThreadIdFromUrl();
+    if (!threadId) {
+        mainPost.textContent = "No thread selected.";
+        repliesList.innerHTML = "";
+        return;
+    }
+
+    try {
+        // Load the main post
+        const postRef = doc(db, "posts", threadId);
+        const postSnap = await getDoc(postRef);
+
+        if (!postSnap.exists()) {
+            mainPost.textContent = "Post not found.";
+            repliesList.innerHTML = "";
+            return;
+        }
+
+        const post = postSnap.data();
+
+        if (post.type === "photo") {
+            mainPost.innerHTML = `
+                <img src="${post.imageUrl}" style="width:100%;border-radius:12px;margin-bottom:10px;" />
+                <div class="tag">${post.tag || "Photography"}</div>
+            `;
+        } else {
+            // default to text post
+            mainPost.innerHTML = `
+                <div>${post.content || ""}</div>
+                <div class="tag">${post.tag || "Reflection"}</div>
+            `;
+        }
+
+        // Load replies
+        const repliesRef = collection(db, "posts", threadId, "replies");
+        const repliesQ = query(repliesRef, orderBy("created", "asc"));
+        const repliesSnap = await getDocs(repliesQ);
+
+        repliesList.innerHTML = "";
+
+        if (repliesSnap.empty) {
+            repliesList.innerHTML = `
+                <div style="text-align:center;font-size:13px;color:#4c5c6b;margin-top:12px;">
+                    No replies yet. Be the first to respond.
+                </div>
+            `;
+            return;
+        }
+
+        repliesSnap.forEach(docSnap => {
+            const reply = docSnap.data();
+            const div = document.createElement("div");
+            div.className = "reply";
+
+            const userName = reply.userName || "Someone";
+
+            div.innerHTML = `
+                <div class="reply-user">${userName}</div>
+                <div>${reply.text || ""}</div>
+            `;
+            repliesList.appendChild(div);
+        });
+    } catch (err) {
+        console.error(err);
+        mainPost.textContent = "Something went wrong loading this thread.";
+    }
+}
+
+export async function createReply() {
+    const input = document.getElementById("replyInput");
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) {
+        alert("Write a reply first.");
+        return;
+    }
+
+    const threadId = getThreadIdFromUrl();
+    if (!threadId) {
+        alert("No thread found for this reply.");
+        return;
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You need to be signed in to reply.");
+        return;
+    }
+
+    try {
+        const repliesRef = collection(db, "posts", threadId, "replies");
+        await addDoc(repliesRef, {
+            text,
+            userId: user.uid,
+            userName: user.displayName || user.email || "Someone",
+            created: serverTimestamp()
+        });
+
+        input.value = "";
+        await loadThread(); // refresh replies
+    } catch (err) {
+        console.error(err);
+        alert("Couldn't send your reply. Please try again.");
+    }
+}
+
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
-window.signUpUser       = signUpUser;
-window.loginUser        = loginUser;
-window.logoutUser       = logoutUser;
-window.signOutUser      = signOutUser;
-window.selectMood       = selectMood;
-window.createTextPost   = createTextPost;
-window.createPhotoPost  = createPhotoPost;
-window.loadFeed         = loadFeed;
-window.loadProfile      = loadProfile;
+window.signUpUser        = signUpUser;
+window.loginUser         = loginUser;
+window.logoutUser        = logoutUser;
+window.signOutUser       = signOutUser;
+window.selectMood        = selectMood;
+window.createTextPost    = createTextPost;
+window.createPhotoPost   = createPhotoPost;
+window.loadFeed          = loadFeed;
+window.loadProfile       = loadProfile;
 window.updateDisplayName = updateDisplayName;
-window.loadThread       = loadThread;
-window.createReply      = createReply;
+window.loadThread        = loadThread;
+window.createReply       = createReply;
+window.loadPreferences   = loadPreferences;
+window.toggleDarkMode    = toggleDarkMode;
