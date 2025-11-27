@@ -209,22 +209,21 @@ document.addEventListener("DOMContentLoaded", () => {
 // ---------------------------------------------------------------------
 export async function createTextPost() {
     const input = document.getElementById("textPostInput");
-    const text = input?.value.trim() || "";
+    const text = input.value.trim();
 
     if (!text) return alert("Write something first.");
 
     const user = auth.currentUser;
     if (!user) return alert("You must be logged in.");
 
-    // Pull tag from the selector on post.html
-    const tagSelect = document.getElementById("tagSelect");
-    const tag = tagSelect && tagSelect.value ? tagSelect.value : "Reflection";
+    // NEW: grab current mood
+    const mood = localStorage.getItem("currentMood") || "Neutral";
 
     await addDoc(collection(db, "posts"), {
         type: "text",
         content: text,
-        tag: tag,
         userId: user.uid,
+        mood: mood,                // 🔹 save mood
         created: serverTimestamp()
     });
 
@@ -234,7 +233,7 @@ export async function createTextPost() {
 
 export async function createPhotoPost() {
     const input = document.getElementById("photoPostInput");
-    if (!input || !input.files.length) return alert("Upload a photo first.");
+    if (!input.files.length) return alert("Upload a photo first.");
 
     const file = input.files[0];
     const user = auth.currentUser;
@@ -244,15 +243,14 @@ export async function createPhotoPost() {
     await uploadBytes(storageRef, file);
     const url = await getDownloadURL(storageRef);
 
-    // Use the same tag selector as the text post
-    const tagSelect = document.getElementById("tagSelect");
-    const tag = tagSelect && tagSelect.value ? tagSelect.value : "Reflection";
+    // NEW: grab current mood
+    const mood = localStorage.getItem("currentMood") || "Neutral";
 
     await addDoc(collection(db, "posts"), {
         type: "photo",
         imageUrl: url,
-        tag: tag,
         userId: user.uid,
+        mood: mood,                // 🔹 save mood
         created: serverTimestamp(),
     });
 
@@ -285,6 +283,7 @@ function formatPostTime(created) {
 
         return date.toLocaleDateString();
     } catch (e) {
+        console.error("Error formatting time", e);
         return "recently";
     }
 }
@@ -294,79 +293,93 @@ export async function loadFeed() {
     const container = document.getElementById("feedContainer");
     if (!container) return;
 
-    const postsQuery = query(
-        collection(db, "posts"),
-        orderBy("created", "desc")
-    );
+    container.innerHTML = `
+        <div class="feed-loading">Loading your corner…</div>
+    `;
 
-    const snapshot = await getDocs(postsQuery);
-    container.innerHTML = "";
+    try {
+        const postsQuery = query(
+            collection(db, "posts"),
+            orderBy("created", "desc")
+        );
 
-    if (snapshot.empty) {
-        const empty = document.createElement("div");
-        empty.textContent = "Nothing here yet. Your first note could go here.";
-        empty.style.fontSize = "13px";
-        empty.style.color = "#64748b";
-        container.appendChild(empty);
-        return;
-    }
+        const snapshot = await getDocs(postsQuery);
+        container.innerHTML = "";
 
-    snapshot.forEach(docSnap => {
-        const post = docSnap.data();
-        const postId = docSnap.id;
-
-        const article = document.createElement("article");
-        article.className = "post";
-        article.dataset.postId = postId;
-
-        const tagLabel =
-            post.tag || (post.type === "photo" ? "Photography" : "Reflection");
-        const createdLabel = formatPostTime(post.created);
-
-        article.innerHTML = `
-            <div class="post-header">
-                <div class="post-meta">You · ${createdLabel}</div>
-                <div class="post-tag">
-                    <span class="post-tag-dot"></span>
-                    <span class="post-tag-label">${tagLabel}</span>
-                </div>
-            </div>
-
-            ${
-                post.type === "photo"
-                    ? `<img src="${post.imageUrl}" alt="" class="postPhoto" />`
-                    : `<div class="postText"></div>`
-            }
-
-            <div class="post-footer">
-                <div class="comment-summary">No comments yet</div>
-                <button class="comment-toggle-btn" type="button">Comment</button>
-            </div>
-
-            <div class="comments" style="display:none;">
-                <div class="comments-list"></div>
-                <div class="add-comment-row">
-                    <input
-                        class="add-comment-input"
-                        type="text"
-                        placeholder="Add a gentle reply…"
-                    />
-                    <button class="add-comment-btn" type="button">Send</button>
-                </div>
-            </div>
-        `;
-
-        // Avoid injecting text as HTML
-        if (post.type === "text") {
-            const textEl = article.querySelector(".postText");
-            if (textEl) textEl.textContent = post.content || "";
+        if (snapshot.empty) {
+            const empty = document.createElement("div");
+            empty.textContent = "Nothing here yet. Your first note could go here.";
+            empty.style.fontSize = "13px";
+            empty.style.color = "#64748b";
+            container.appendChild(empty);
+            return;
         }
 
-        container.appendChild(article);
+        snapshot.forEach(docSnap => {
+            const post = docSnap.data();
+            const postId = docSnap.id;
 
-        // wire up comments for this post
-        setupCommentsForPost(postId, article);
-    });
+            const article = document.createElement("article");
+            article.className = "post";
+            article.dataset.postId = postId;
+
+            const tagLabel =
+                post.tag || (post.type === "photo" ? "Photography" : "Reflection");
+            const createdLabel = formatPostTime(post.created);
+
+            article.innerHTML = `
+                <div class="post-header">
+                    <div class="post-meta">You · ${createdLabel}</div>
+                    <div class="post-tag">
+                        <span class="post-tag-dot"></span>
+                        <span class="post-tag-label">${tagLabel}</span>
+                    </div>
+                </div>
+
+                ${
+                    post.type === "photo"
+                        ? `<img src="${post.imageUrl}" alt="" class="postPhoto" />`
+                        : `<div class="postText"></div>`
+                }
+
+                <div class="post-footer">
+                    <div class="comment-summary">No comments yet</div>
+                    <button class="comment-toggle-btn" type="button">Comment</button>
+                </div>
+
+                <div class="comments" style="display:none;">
+                    <div class="comments-list"></div>
+                    <div class="add-comment-row">
+                        <input
+                            class="add-comment-input"
+                            type="text"
+                            placeholder="Add a gentle reply…"
+                        />
+                        <button class="add-comment-btn" type="button">Send</button>
+                    </div>
+                </div>
+            `;
+
+            // Avoid injecting text as HTML
+            if (post.type === "text") {
+                const textEl = article.querySelector(".postText");
+                if (textEl) textEl.textContent = post.content || "";
+            }
+
+            container.appendChild(article);
+
+            // Wire up comments for this post
+            setupCommentsForPost(postId, article);
+        });
+    } catch (err) {
+        console.error("Error loading feed", err);
+        container.innerHTML = "";
+        const errorEl = document.createElement("div");
+        errorEl.textContent = "Couldn’t load your feed. Please try again in a moment.";
+        errorEl.style.fontSize = "13px";
+        errorEl.style.color = "#b91c1c";
+        container.appendChild(errorEl);
+    }
 }
 
 // Auto-run on page load (safe: returns early if #feedContainer not present)
@@ -396,32 +409,37 @@ async function setupCommentsForPost(postId, articleEl) {
     async function refreshComments() {
         commentsList.innerHTML = "";
 
-        const commentsCol = collection(db, "posts", postId, "comments");
-        const commentsQuery = query(commentsCol, orderBy("created", "asc"));
-        const snap = await getDocs(commentsQuery);
+        try {
+            const commentsCol = collection(db, "posts", postId, "comments");
+            const commentsQuery = query(commentsCol, orderBy("created", "asc"));
+            const snap = await getDocs(commentsQuery);
 
-        let count = 0;
-        snap.forEach(docSnap => {
-            const c = docSnap.data();
-            const item = document.createElement("div");
-            item.className = "comment-item";
+            let count = 0;
+            snap.forEach(docSnap => {
+                const c = docSnap.data();
+                const item = document.createElement("div");
+                item.className = "comment-item";
 
-            const author = c.authorName || "Someone";
+                const author = c.authorName || "Someone";
 
-            item.innerHTML = `
-                <span class="comment-author">${author}</span>
-                <span>${c.text || ""}</span>
-            `;
-            commentsList.appendChild(item);
-            count++;
-        });
+                item.innerHTML = `
+                    <span class="comment-author">${author}</span>
+                    <span>${c.text || ""}</span>
+                `;
+                commentsList.appendChild(item);
+                count++;
+            });
 
-        if (count === 0) {
-            summaryEl.textContent = "No comments yet";
-        } else if (count === 1) {
-            summaryEl.textContent = "1 gentle reply";
-        } else {
-            summaryEl.textContent = `${count} gentle replies`;
+            if (count === 0) {
+                summaryEl.textContent = "No comments yet";
+            } else if (count === 1) {
+                summaryEl.textContent = "1 gentle reply";
+            } else {
+                summaryEl.textContent = `${count} gentle replies`;
+            }
+        } catch (err) {
+            console.error("Error loading comments", err);
+            summaryEl.textContent = "Couldn’t load replies";
         }
     }
 
