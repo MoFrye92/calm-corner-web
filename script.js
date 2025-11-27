@@ -5,386 +5,423 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
 import {
-  getFirestore,
-  collection,
-  addDoc,
-  doc,
-  getDoc,
-  setDoc,
-  getDocs,
-  serverTimestamp,
-  query,
-  orderBy
+    getFirestore,
+    collection,
+    addDoc,
+    doc,
+    getDoc,
+    setDoc,
+    getDocs,
+    serverTimestamp,
+    query,
+    orderBy,
+    limit
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  updateProfile
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut,
+    updateProfile
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL
+    getStorage,
+    ref,
+    uploadBytes,
+    getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
-  authDomain: "calm-corner-e92e0.firebaseapp.com",
-  projectId: "calm-corner-e92e0",
-  storageBucket: "calm-corner-e92e0.firebasestorage.app",
-  messagingSenderId: "470025194370",
-  appId: "1:470025194370:web:90830dd0951427b39a1d9b",
-  measurementId: "G-HBC6NHQF19"
+    apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
+    authDomain: "calm-corner-e92e0.firebaseapp.com",
+    projectId: "calm-corner-e92e0",
+    storageBucket: "calm-corner-e92e0.firebasestorage.app",
+    messagingSenderId: "470025194370",
+    appId: "1:470025194370:web:90830dd0951427b39a1d9b",
+    measurementId: "G-HBC6NHQF19"
 };
 
 const app = initializeApp(firebaseConfig);
-try {
-  getAnalytics(app);
-} catch (e) {
-  console.warn("Analytics disabled / not available:", e);
-}
+const analytics = getAnalytics(app);
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
 // ---------------------------------------------------------------------
-// LANDING FLOW
-// ---------------------------------------------------------------------
-export function handleBegin() {
-  // Resolve auth state then route
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    unsubscribe();
-    if (user) {
-      window.location.href = "mood.html";
-    } else {
-      window.location.href = "signup.html";
-    }
-  });
-}
-
-// ---------------------------------------------------------------------
 // AUTH FUNCTIONS
 // ---------------------------------------------------------------------
 export async function signUpUser() {
-  const email = document.getElementById("emailInput")?.value;
-  const pass = document.getElementById("passwordInput")?.value;
+    const email = document.getElementById("emailInput")?.value;
+    const pass = document.getElementById("passwordInput")?.value;
 
-  if (!email || !pass) {
-    alert("Please enter email and password.");
-    return;
-  }
+    if (!email || !pass) {
+        alert("Please enter an email and password.");
+        return;
+    }
 
-  try {
-    const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+    try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
 
-    // Create user profile in Firestore
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      displayName: email.split("@")[0],
-      email: email,
-      avatarUrl: ""
-    });
+        // Create user profile in Firestore
+        await setDoc(doc(db, "users", userCred.user.uid), {
+            displayName: email.split("@")[0],
+            email: email,
+            avatarUrl: "",
+        });
 
-    window.location.href = "mood.html";
-  } catch (err) {
-    alert(err.message);
-  }
+        window.location.href = "mood.html";
+    } catch (err) {
+        alert(err.message);
+    }
 }
 
 export async function loginUser() {
-  const email = document.getElementById("loginEmail")?.value;
-  const pass = document.getElementById("loginPassword")?.value;
+    const email = document.getElementById("loginEmail")?.value;
+    const pass = document.getElementById("loginPassword")?.value;
 
-  if (!email || !pass) {
-    alert("Please enter email and password.");
-    return;
-  }
+    if (!email || !pass) {
+        alert("Please enter your email and password.");
+        return;
+    }
 
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-    window.location.href = "mood.html"; // go pick mood/focus after login
-  } catch (err) {
-    alert(err.message);
-  }
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        window.location.href = "feed.html";
+    } catch (err) {
+        alert(err.message);
+    }
 }
 
-export async function logoutUser() {
-  await signOut(auth);
-  window.location.href = "index.html";
+export function logoutUser() {
+    signOut(auth).then(() => {
+        window.location.href = "index.html";
+    });
+}
+
+// Backwards-compatible alias if any HTML still calls signOutUser()
+export function signOutUser() {
+    logoutUser();
 }
 
 // ---------------------------------------------------------------------
-// PROFILE LOADING / UPDATING
+// PROFILE LOADING / UPDATING  (single, clean version)
 // ---------------------------------------------------------------------
 export function loadProfile() {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-      return;
-    }
-
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const data = userDoc.data() || {};
-
-    const nameEl = document.getElementById("displayName");
-    const emailEl = document.getElementById("emailField");
-    const avatarImg = document.getElementById("avatarImg");
-
-    if (nameEl) nameEl.textContent = data.displayName || user.displayName || "Anonymous";
-    if (emailEl) emailEl.textContent = data.email || user.email || "";
-    if (avatarImg) {
-      avatarImg.src = data.avatarUrl || user.photoURL || "https://via.placeholder.com/100?text=Avatar";
-    }
-
-    // avatar upload
-    const avatarInput = document.getElementById("avatarInput");
-    if (avatarInput) {
-      avatarInput.onchange = () => {
-        if (avatarInput.files[0]) {
-          uploadAvatar(user.uid, avatarInput.files[0]);
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "index.html";
+            return;
         }
-      };
-    }
-  });
+
+        const profileNameEl   = document.getElementById("displayName");
+        const profileEmailEl  = document.getElementById("emailField");
+        const avatarImgEl     = document.getElementById("avatarImg");
+        const avatarInputEl   = document.getElementById("avatarInput");
+
+        // If the profile page isn't actually loaded, just bail
+        if (!profileNameEl || !profileEmailEl || !avatarImgEl) return;
+
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const data = userDoc.exists() ? userDoc.data() : {
+            displayName: user.displayName || user.email || "Anonymous",
+            email: user.email,
+            avatarUrl: ""
+        };
+
+        profileNameEl.textContent  = data.displayName || "Anonymous";
+        profileEmailEl.textContent = data.email || user.email || "";
+
+        avatarImgEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
+
+        if (avatarInputEl) {
+            avatarInputEl.onchange = () => {
+                if (avatarInputEl.files && avatarInputEl.files[0]) {
+                    uploadAvatar(user.uid, avatarInputEl.files[0]);
+                }
+            };
+        }
+    });
 }
 
 export async function uploadAvatar(uid, file) {
-  const storageRef = ref(storage, `avatars/${uid}.jpg`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+    const storageRef = ref(storage, `avatars/${uid}.jpg`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  await setDoc(doc(db, "users", uid), { avatarUrl: url }, { merge: true });
+    await setDoc(doc(db, "users", uid), { avatarUrl: url }, { merge: true });
 
-  const avatarImg = document.getElementById("avatarImg");
-  if (avatarImg) avatarImg.src = url;
+    const avatarImgEl = document.getElementById("avatarImg");
+    if (avatarImgEl) avatarImgEl.src = url;
 }
 
 export async function updateDisplayName() {
-  const newName = prompt("Enter your new name:");
-  if (!newName) return;
+    const newName = prompt("Enter your new name:");
+    if (!newName) return;
 
-  const user = auth.currentUser;
-  if (!user) return;
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Not logged in.");
+        return;
+    }
 
-  await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
-  await updateProfile(user, { displayName: newName });
+    await setDoc(
+        doc(db, "users", user.uid),
+        { displayName: newName },
+        { merge: true }
+    );
 
-  const nameEl = document.getElementById("displayName");
-  if (nameEl) nameEl.textContent = newName;
+    await updateProfile(user, { displayName: newName });
+
+    const profileNameEl = document.getElementById("displayName");
+    if (profileNameEl) profileNameEl.textContent = newName;
 }
 
 // ---------------------------------------------------------------------
-// MOOD + FOCUS
+// MOOD
 // ---------------------------------------------------------------------
 export function selectMood(mood) {
-  localStorage.setItem("currentMood", mood);
-
-  // Visually highlight selected
-  document.querySelectorAll("[data-mood]").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.mood === mood);
-  });
-
-  hydrateMoodUI();
+    localStorage.setItem("currentMood", mood);
+    window.location.href = "feed.html";
 }
 
-export function selectFocus(focus) {
-  localStorage.setItem("currentFocus", focus);
-
-  document.querySelectorAll("[data-focus]").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.focus === focus);
-  });
-
-  hydrateMoodUI();
+export function loadMood() {
+    const mood = localStorage.getItem("currentMood") || "Neutral";
+    const label = document.getElementById("focusText");
+    if (label) label.textContent = `Content for: ${mood}`;
 }
 
-export function continueToFeed() {
-  const mood = localStorage.getItem("currentMood");
-  const focus = localStorage.getItem("currentFocus");
-
-  if (!mood || !focus) {
-    alert("Please pick both a mood and a focus.");
-    return;
-  }
-
-  window.location.href = "feed.html";
-}
-
-export function hydrateMoodUI() {
-  const mood = localStorage.getItem("currentMood");
-  const focus = localStorage.getItem("currentFocus");
-  const label = document.getElementById("focusText");
-
-  if (label) {
-    if (mood && focus) {
-      label.textContent = `Content for: ${mood} • ${focus}`;
-    } else if (mood) {
-      label.textContent = `Content for: ${mood}`;
-    } else {
-      label.textContent = "Pick how you're feeling and what to focus on.";
-    }
-  }
-
-  // Re-apply selected classes if page reloaded
-  if (mood) {
-    document.querySelectorAll("[data-mood]").forEach((btn) => {
-      btn.classList.toggle("selected", btn.dataset.mood === mood);
-    });
-  }
-
-  if (focus) {
-    document.querySelectorAll("[data-focus]").forEach((btn) => {
-      btn.classList.toggle("selected", btn.dataset.focus === focus);
-    });
-  }
-}
+// Run loadMood on any page that happens to have #focusText
+document.addEventListener("DOMContentLoaded", () => {
+    loadMood();
+});
 
 // ---------------------------------------------------------------------
-// CREATE POSTS (tag with mood + focus)
+// CREATE POSTS
 // ---------------------------------------------------------------------
 export async function createTextPost() {
-  const input = document.getElementById("textPostInput");
-  const text = input?.value.trim();
+    const input = document.getElementById("textPostInput");
+    const text = input?.value.trim();
 
-  if (!text) return alert("Write something first.");
+    if (!text) {
+        alert("Write something first.");
+        return;
+    }
 
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You must be logged in.");
+        return;
+    }
 
-  const mood = localStorage.getItem("currentMood") || null;
-  const focus = localStorage.getItem("currentFocus") || null;
+    await addDoc(collection(db, "posts"), {
+        type: "text",
+        content: text,
+        userId: user.uid,
+        created: serverTimestamp()
+    });
 
-  await addDoc(collection(db, "posts"), {
-    type: "text",
-    content: text,
-    userId: user.uid,
-    mood,
-    focus,
-    created: serverTimestamp()
-  });
-
-  input.value = "";
-  window.location.href = "feed.html";
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
 export async function createPhotoPost() {
-  const input = document.getElementById("photoPostInput");
-  if (!input?.files.length) return alert("Upload a photo first.");
+    const input = document.getElementById("photoPostInput");
+    if (!input || !input.files.length) {
+        alert("Upload a photo first.");
+        return;
+    }
 
-  const file = input.files[0];
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const file = input.files[0];
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You must be logged in.");
+        return;
+    }
 
-  const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  const mood = localStorage.getItem("currentMood") || null;
-  const focus = localStorage.getItem("currentFocus") || null;
+    await addDoc(collection(db, "posts"), {
+        type: "photo",
+        imageUrl: url,
+        userId: user.uid,
+        created: serverTimestamp(),
+    });
 
-  await addDoc(collection(db, "posts"), {
-    type: "photo",
-    imageUrl: url,
-    userId: user.uid,
-    mood,
-    focus,
-    created: serverTimestamp()
-  });
-
-  input.value = "";
-  window.location.href = "feed.html";
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
 // ---------------------------------------------------------------------
-// LOAD FEED (filter by mood + focus)
+// LOAD FEED
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  if (!container) return; // not on this page
+    const container = document.getElementById("feedContainer");
+    if (!container) return; // Not on the feed page
 
-  const moodFilter = localStorage.getItem("currentMood");
-  const focusFilter = localStorage.getItem("currentFocus");
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
 
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
+    const snapshot = await getDocs(postsQuery);
+    container.innerHTML = "";
 
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
+    snapshot.forEach((docData) => {
+        const post = docData.data();
+        const div = document.createElement("div");
+        div.className = "post";
 
-  snapshot.forEach((docSnap) => {
-    const post = docSnap.data();
+        if (post.type === "text") {
+            div.innerHTML = `
+                <div class="postText">${post.content}</div>
+                <div class="tag">Reflection</div>
+            `;
+        } else if (post.type === "photo") {
+            div.innerHTML = `
+                <img src="${post.imageUrl}" class="postPhoto" />
+                <div class="tag">Photography</div>
+            `;
+        }
 
-    // client-side filtering to avoid index headaches
-    if (moodFilter && post.mood && post.mood !== moodFilter) return;
-    if (focusFilter && post.focus && post.focus !== focusFilter) return;
+        container.appendChild(div);
+    });
+}
 
-    const div = document.createElement("div");
-    div.className = "post";
+// Auto-run feed loading only on pages that have #feedContainer
+document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("feedContainer");
+    if (container) {
+        loadFeed().catch(console.error);
+    }
+});
 
-    let tagsHtml = "";
-    const tags = [];
-    if (post.mood) tags.push(post.mood);
-    if (post.focus) tags.push(post.focus);
+// ---------------------------------------------------------------------
+// THREADS (main post + replies)
+// Firestore structure:
+//   threads (collection)
+//     - threadId (doc) { title, body, tag, created, userId }
+//     - replies (subcollection)
+//         - replyId (doc) { text, userId, displayName, created }
+// ---------------------------------------------------------------------
+async function resolveThreadRef() {
+    const urlParams = new URLSearchParams(window.location.search);
+    let threadId = urlParams.get("id");
+    let threadRef;
 
-    if (tags.length) {
-      tagsHtml = `<div class="tag-row">
-        ${tags.map((t) => `<span class="tag">${t}</span>`).join("")}
-      </div>`;
+    if (threadId) {
+        threadRef = doc(db, "threads", threadId);
+    } else {
+        // If no ?id= is provided, grab the most recent thread
+        const q = query(collection(db, "threads"), orderBy("created", "desc"), limit(1));
+        const snap = await getDocs(q);
+        if (snap.empty) return null;
+        const first = snap.docs[0];
+        threadId = first.id;
+        threadRef = first.ref;
     }
 
-    if (post.type === "text") {
-      div.innerHTML = `
-        <div class="postText">${post.content}</div>
-        ${tagsHtml || `<div class="tag">Reflection</div>`}
-      `;
-    } else if (post.type === "photo") {
-      div.innerHTML = `
-        <img src="${post.imageUrl}" class="postPhoto" />
-        ${tagsHtml || `<div class="tag">Photography</div>`}
-      `;
+    window.currentThreadId = threadId;
+    return threadRef;
+}
+
+export async function loadThread() {
+    const mainPostEl   = document.getElementById("mainPost");
+    const repliesList  = document.getElementById("repliesList");
+
+    if (!mainPostEl || !repliesList) return; // Not on thread page
+
+    mainPostEl.innerHTML = "Loading…";
+    repliesList.innerHTML = "";
+
+    const threadRef = await resolveThreadRef();
+    if (!threadRef) {
+        mainPostEl.innerHTML = "No thread found yet.";
+        return;
     }
 
-    container.appendChild(div);
-  });
+    const threadSnap = await getDoc(threadRef);
+    if (!threadSnap.exists()) {
+        mainPostEl.innerHTML = "That thread doesn't exist.";
+        return;
+    }
 
-  if (!container.children.length) {
-    container.innerHTML = `<div class="empty-state">
-      No posts yet for this mood and focus.
-    </div>`;
-  }
+    const thread = threadSnap.data();
+
+    mainPostEl.innerHTML = `
+        <div>${thread.title ? `<strong>${thread.title}</strong><br/><br/>` : ""}${thread.body || ""}</div>
+        ${thread.tag ? `<div class="tag">${thread.tag}</div>` : ""}
+    `;
+
+    // Load replies
+    const repliesQuery = query(
+        collection(threadRef, "replies"),
+        orderBy("created", "asc")
+    );
+    const repliesSnap = await getDocs(repliesQuery);
+    repliesList.innerHTML = "";
+
+    repliesSnap.forEach((replyDoc) => {
+        const r = replyDoc.data();
+        const div = document.createElement("div");
+        div.className = "reply";
+        div.innerHTML = `
+            <div class="reply-user">${r.displayName || "Someone"}</div>
+            <div>${r.text || ""}</div>
+        `;
+        repliesList.appendChild(div);
+    });
+}
+
+export async function createReply() {
+    const input = document.getElementById("replyInput");
+    if (!input) return;
+
+    const text = input.value.trim();
+    if (!text) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+        alert("You need to be logged in to reply.");
+        return;
+    }
+
+    const threadId = window.currentThreadId;
+    if (!threadId) {
+        alert("No thread selected.");
+        return;
+    }
+
+    const threadRef = doc(db, "threads", threadId);
+
+    await addDoc(collection(threadRef, "replies"), {
+        text,
+        userId: user.uid,
+        displayName: user.displayName || user.email || "Anonymous",
+        created: serverTimestamp()
+    });
+
+    input.value = "";
+    await loadThread();
 }
 
 // ---------------------------------------------------------------------
-// GLOBAL HOOKS FOR INLINE HTML
+// Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
-document.addEventListener("DOMContentLoaded", () => {
-  // mood page hydration if present
-  hydrateMoodUI();
-  // feed page load if present
-  loadFeed().catch(() => {});
-});
-
-// Make functions available to inline onclick / onload in HTML
-window.handleBegin = handleBegin;
-
-window.signUpUser = signUpUser;
-window.loginUser = loginUser;
-window.logoutUser = logoutUser;
-window.signOutUser = logoutUser; // alias if you use this name anywhere
-
-window.loadProfile = loadProfile;
+window.signUpUser       = signUpUser;
+window.loginUser        = loginUser;
+window.logoutUser       = logoutUser;
+window.signOutUser      = signOutUser;
+window.selectMood       = selectMood;
+window.createTextPost   = createTextPost;
+window.createPhotoPost  = createPhotoPost;
+window.loadFeed         = loadFeed;
+window.loadProfile      = loadProfile;
 window.updateDisplayName = updateDisplayName;
-
-window.selectMood = selectMood;
-window.selectFocus = selectFocus;
-window.continueToFeed = continueToFeed;
-
-window.createTextPost = createTextPost;
-window.createPhotoPost = createPhotoPost;
+window.loadThread       = loadThread;
+window.createReply      = createReply;
