@@ -13,7 +13,7 @@
             font-family: system-ui, Arial, sans-serif;
             background: #f5f6f8;
             margin: 0;
-            padding: 20px;
+            padding: 20px 20px 90px; /* extra bottom padding so content doesn't sit under nav */
             color: #1d2b3a;
         }
 
@@ -21,16 +21,80 @@
             text-align: center;
             margin-top: 10px;
             margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        /* Messages list */
+        .messages-list {
+            max-width: 420px;
+            margin: 0 auto;
         }
 
         .message-card {
             background: white;
-            padding: 18px;
+            padding: 14px 16px;
             border-radius: 14px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
         }
 
+        .message-card:hover {
+            background: #f0f3f7;
+            transform: translateY(-1px);
+        }
+
+        .message-card.unread {
+            background: #eef3ff;
+        }
+
+        .message-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .message-main {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .message-snippet {
+            font-size: 13px;
+            color: #4c5c6b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .message-meta {
+            text-align: right;
+            font-size: 11px;
+            color: #7b8794;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1d2b3a;
+        }
+
+        /* Bottom nav */
         .nav {
             position: fixed;
             bottom: 0;
@@ -40,50 +104,28 @@
             border-top: 1px solid #d9e0e6;
             display: flex;
             justify-content: space-around;
-            padding: 12px 0;
-            font-size: 13px;
+            padding: 8px 0 10px;
+            font-size: 12px;
+            z-index: 20;
         }
 
         .nav a {
             color: #4c5c6b;
             text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .nav a .icon {
+            font-size: 18px;
         }
 
         .nav a.active {
             font-weight: 600;
             color: #1d2b3a;
         }
-        .nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-top: 1px solid #d9e0e6;
-  display: flex;
-  justify-content: space-around;
-  padding: 8px 0 10px;
-  font-size: 12px;
-  z-index: 20;
-}
-
-.nav a {
-  color: #4c5c6b;
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.nav a .icon {
-  font-size: 18px;
-}
-
-.nav a.active {
-  font-weight: 600;
-  color: #1d2b3a;
-}
     </style>
 </head>
 
@@ -91,32 +133,93 @@
 
 <h1>Messages</h1>
 
-<div class="message-card">
-    This is where your messages will appear.
+<div id="messagesList" class="messages-list">
+    <!-- Messages will be populated here via script -->
 </div>
 
 <div class="nav">
-  <a href="feed.html" >
-    <span class="icon">🏠</span>
-    <span>Home</span>
-  </a>
-  <a href="post.html">
-    <span class="icon">✍️</span>
-    <span>Post</span>
-  </a>
-  <a href="topics.html">
-    <span class="icon">🧩</span>
-    <span>Topics</span>
-  </a>
-  <a href="message.html">
-    <span class="icon">💬</span>
-    <span>Messages</span>
-  </a>
-  <a href="profile.html class="active"">
-    <span class="icon">👤</span>
-    <span>Profile</span>
-  </a>
+    <a href="feed.html">
+        <span class="icon">🏠</span>
+        <span>Home</span>
+    </a>
+    <a href="post.html">
+        <span class="icon">✍️</span>
+        <span>Post</span>
+    </a>
+    <a href="topics.html">
+        <span class="icon">🧩</span>
+        <span>Topics</span>
+    </a>
+    <a href="message.html" class="active">
+        <span class="icon">💬</span>
+        <span>Messages</span>
+    </a>
+    <a href="profile.html">
+        <span class="icon">👤</span>
+        <span>Profile</span>
+    </a>
 </div>
+
+<!-- Page-specific script to render example threads and navigate to thread.html -->
+<script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+        const list = document.getElementById("messagesList");
+        if (!list) return;
+
+        // Placeholder data; you can later replace this with Firestore-backed threads
+        const threads = [
+            {
+                id: "welcome",
+                title: "Welcome to A Calm Corner",
+                snippet: "Here’s a quick tour of your calm conversation space.",
+                time: "Just now",
+                unread: true
+            },
+            {
+                id: "reflection",
+                title: "Daily reflection",
+                snippet: "How are you feeling about today so far?",
+                time: "Today",
+                unread: false
+            },
+            {
+                id: "check-in",
+                title: "Gentle check-in",
+                snippet: "Haven’t heard from you in a while. Want to journal something small?",
+                time: "Yesterday",
+                unread: false
+            }
+        ];
+
+        list.innerHTML = "";
+
+        threads.forEach(thread => {
+            const card = document.createElement("div");
+            card.className = "message-card" + (thread.unread ? " unread" : "");
+
+            card.innerHTML = `
+                <div class="message-row">
+                    <div class="message-main">
+                        <div class="message-title">${thread.title}</div>
+                        <div class="message-snippet">${thread.snippet}</div>
+                    </div>
+                    <div class="message-meta">
+                        <div class="message-time">${thread.time}</div>
+                        ${thread.unread ? '<span class="unread-dot"></span>' : ""}
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener("click", () => {
+                // For now, just go to the generic thread page.
+                // Later you can pass an ID: thread.html?id=${thread.id}
+                window.location.href = "thread.html";
+            });
+
+            list.appendChild(card);
+        });
+    });
+</script>
 
 </body>
 </html>
