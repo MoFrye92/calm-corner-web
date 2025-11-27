@@ -3,6 +3,7 @@
 // ---------------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
+
 import {
   getFirestore,
   collection,
@@ -43,18 +44,30 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-// Analytics can throw in unsupported environments, so guard it.
-let analytics = null;
 try {
-  analytics = getAnalytics(app);
+  getAnalytics(app);
 } catch (e) {
-  console.warn("Analytics not initialized:", e?.message || e);
+  console.warn("Analytics disabled / not available:", e);
 }
 
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
+
+// ---------------------------------------------------------------------
+// LANDING FLOW
+// ---------------------------------------------------------------------
+export function handleBegin() {
+  // Resolve auth state then route
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    unsubscribe();
+    if (user) {
+      window.location.href = "mood.html";
+    } else {
+      window.location.href = "signup.html";
+    }
+  });
+}
 
 // ---------------------------------------------------------------------
 // AUTH FUNCTIONS
@@ -64,7 +77,7 @@ export async function signUpUser() {
   const pass = document.getElementById("passwordInput")?.value;
 
   if (!email || !pass) {
-    alert("Please enter an email and password.");
+    alert("Please enter email and password.");
     return;
   }
 
@@ -89,85 +102,51 @@ export async function loginUser() {
   const pass = document.getElementById("loginPassword")?.value;
 
   if (!email || !pass) {
-    alert("Please enter your email and password.");
+    alert("Please enter email and password.");
     return;
   }
 
   try {
     await signInWithEmailAndPassword(auth, email, pass);
-    window.location.href = "feed.html";
+    window.location.href = "mood.html"; // go pick mood/focus after login
   } catch (err) {
     alert(err.message);
   }
 }
 
-export function logoutUser() {
-  signOut(auth).finally(() => {
-    window.location.href = "index.html";
-  });
+export async function logoutUser() {
+  await signOut(auth);
+  window.location.href = "index.html";
 }
-
-// Backward-compat alias if HTML still calls signOutUser()
-export function signOutUser() {
-  logoutUser();
-}
-
-// Attach login handler on login page (if button exists)
-document.addEventListener("DOMContentLoaded", () => {
-  const loginBtn = document.getElementById("loginBtn");
-  if (loginBtn) {
-    loginBtn.addEventListener("click", loginUser);
-  }
-});
 
 // ---------------------------------------------------------------------
-// PROFILE LOADING / UPDATING (profile.html, legacy IDs supported too)
+// PROFILE LOADING / UPDATING
 // ---------------------------------------------------------------------
 export function loadProfile() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // If not signed in, send them to index (or signup, your choice)
       window.location.href = "index.html";
       return;
     }
 
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const data = userSnap.exists()
-      ? userSnap.data()
-      : {
-          displayName: user.displayName || "Anonymous",
-          email: user.email || "",
-          avatarUrl: ""
-        };
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const data = userDoc.data() || {};
 
-    // New IDs (profile.html current version)
-    const displayNameEl = document.getElementById("displayName");
-    const emailFieldEl = document.getElementById("emailField");
-    const avatarImgEl = document.getElementById("avatarImg");
+    const nameEl = document.getElementById("displayName");
+    const emailEl = document.getElementById("emailField");
+    const avatarImg = document.getElementById("avatarImg");
 
-    if (displayNameEl) displayNameEl.textContent = data.displayName || "Anonymous";
-    if (emailFieldEl) emailFieldEl.textContent = data.email || user.email || "";
-    if (avatarImgEl) {
-      avatarImgEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
-    }
-
-    // Old IDs (if any pages still use them)
-    const nameEl = document.getElementById("name");
-    const emailEl = document.getElementById("email");
-    const avatarEl = document.getElementById("avatar");
-
-    if (nameEl) nameEl.textContent = data.displayName || "Anonymous";
+    if (nameEl) nameEl.textContent = data.displayName || user.displayName || "Anonymous";
     if (emailEl) emailEl.textContent = data.email || user.email || "";
-    if (avatarEl) {
-      avatarEl.src = data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
+    if (avatarImg) {
+      avatarImg.src = data.avatarUrl || user.photoURL || "https://via.placeholder.com/100?text=Avatar";
     }
 
-    // Avatar upload input (only on profile page)
+    // avatar upload
     const avatarInput = document.getElementById("avatarInput");
     if (avatarInput) {
       avatarInput.onchange = () => {
-        if (avatarInput.files && avatarInput.files[0]) {
+        if (avatarInput.files[0]) {
           uploadAvatar(user.uid, avatarInput.files[0]);
         }
       };
@@ -176,26 +155,14 @@ export function loadProfile() {
 }
 
 export async function uploadAvatar(uid, file) {
-  try {
-    const storageRef = ref(storage, `avatars/${uid}.jpg`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+  const storageRef = ref(storage, `avatars/${uid}.jpg`);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
 
-    await setDoc(
-      doc(db, "users", uid),
-      { avatarUrl: url },
-      { merge: true }
-    );
+  await setDoc(doc(db, "users", uid), { avatarUrl: url }, { merge: true });
 
-    const avatarImgEl = document.getElementById("avatarImg");
-    if (avatarImgEl) avatarImgEl.src = url;
-
-    const avatarEl = document.getElementById("avatar");
-    if (avatarEl) avatarEl.src = url;
-  } catch (err) {
-    console.error(err);
-    alert("Problem uploading avatar.");
-  }
+  const avatarImg = document.getElementById("avatarImg");
+  if (avatarImg) avatarImg.src = url;
 }
 
 export async function updateDisplayName() {
@@ -205,71 +172,99 @@ export async function updateDisplayName() {
   const user = auth.currentUser;
   if (!user) return;
 
-  try {
-    await setDoc(
-      doc(db, "users", user.uid),
-      { displayName: newName },
-      { merge: true }
-    );
+  await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
+  await updateProfile(user, { displayName: newName });
 
-    await updateProfile(user, { displayName: newName });
-
-    const displayNameEl = document.getElementById("displayName");
-    if (displayNameEl) displayNameEl.textContent = newName;
-
-    const nameEl = document.getElementById("name");
-    if (nameEl) nameEl.textContent = newName;
-  } catch (err) {
-    console.error(err);
-    alert("Could not update your name.");
-  }
+  const nameEl = document.getElementById("displayName");
+  if (nameEl) nameEl.textContent = newName;
 }
 
 // ---------------------------------------------------------------------
-// MOOD (mood.html + harmless helper on other pages)
+// MOOD + FOCUS
 // ---------------------------------------------------------------------
 export function selectMood(mood) {
   localStorage.setItem("currentMood", mood);
-  window.location.href = "feed.html";
+
+  // Visually highlight selected
+  document.querySelectorAll("[data-mood]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.mood === mood);
+  });
+
+  hydrateMoodUI();
 }
 
-export function loadMood() {
-  const mood = localStorage.getItem("currentMood") || "Neutral";
-  const label = document.getElementById("focusText");
-  if (label) label.textContent = `Content for: ${mood}`;
+export function selectFocus(focus) {
+  localStorage.setItem("currentFocus", focus);
+
+  document.querySelectorAll("[data-focus]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.focus === focus);
+  });
+
+  hydrateMoodUI();
 }
 
-// Run on all pages, harmless if #focusText is missing
-document.addEventListener("DOMContentLoaded", () => {
-  loadMood();
-});
+export function continueToFeed() {
+  const mood = localStorage.getItem("currentMood");
+  const focus = localStorage.getItem("currentFocus");
 
-// ---------------------------------------------------------------------
-// CREATE POSTS (post.html)
-// ---------------------------------------------------------------------
-export async function createTextPost() {
-  const input = document.getElementById("textPostInput");
-  if (!input) {
-    alert("Missing text input on this page.");
+  if (!mood || !focus) {
+    alert("Please pick both a mood and a focus.");
     return;
   }
 
-  const text = input.value.trim();
+  window.location.href = "feed.html";
+}
+
+export function hydrateMoodUI() {
+  const mood = localStorage.getItem("currentMood");
+  const focus = localStorage.getItem("currentFocus");
+  const label = document.getElementById("focusText");
+
+  if (label) {
+    if (mood && focus) {
+      label.textContent = `Content for: ${mood} • ${focus}`;
+    } else if (mood) {
+      label.textContent = `Content for: ${mood}`;
+    } else {
+      label.textContent = "Pick how you're feeling and what to focus on.";
+    }
+  }
+
+  // Re-apply selected classes if page reloaded
+  if (mood) {
+    document.querySelectorAll("[data-mood]").forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.mood === mood);
+    });
+  }
+
+  if (focus) {
+    document.querySelectorAll("[data-focus]").forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.focus === focus);
+    });
+  }
+}
+
+// ---------------------------------------------------------------------
+// CREATE POSTS (tag with mood + focus)
+// ---------------------------------------------------------------------
+export async function createTextPost() {
+  const input = document.getElementById("textPostInput");
+  const text = input?.value.trim();
+
   if (!text) return alert("Write something first.");
 
   const user = auth.currentUser;
   if (!user) return alert("You must be logged in.");
 
-  // get profile info for this user
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const profile = userDoc.exists() ? userDoc.data() : {};
+  const mood = localStorage.getItem("currentMood") || null;
+  const focus = localStorage.getItem("currentFocus") || null;
 
   await addDoc(collection(db, "posts"), {
     type: "text",
     content: text,
     userId: user.uid,
-    userDisplayName: profile.displayName || user.email.split("@")[0],
-    userAvatarUrl: profile.avatarUrl || "",
+    mood,
+    focus,
     created: serverTimestamp()
   });
 
@@ -279,31 +274,25 @@ export async function createTextPost() {
 
 export async function createPhotoPost() {
   const input = document.getElementById("photoPostInput");
-  if (!input) {
-    alert("Missing photo input on this page.");
-    return;
-  }
-
-  if (!input.files.length) return alert("Upload a photo first.");
+  if (!input?.files.length) return alert("Upload a photo first.");
 
   const file = input.files[0];
   const user = auth.currentUser;
   if (!user) return alert("You must be logged in.");
 
-  // get profile info for this user
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const profile = userDoc.exists() ? userDoc.data() : {};
-
   const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
   await uploadBytes(storageRef, file);
   const url = await getDownloadURL(storageRef);
+
+  const mood = localStorage.getItem("currentMood") || null;
+  const focus = localStorage.getItem("currentFocus") || null;
 
   await addDoc(collection(db, "posts"), {
     type: "photo",
     imageUrl: url,
     userId: user.uid,
-    userDisplayName: profile.displayName || user.email.split("@")[0],
-    userAvatarUrl: profile.avatarUrl || "",
+    mood,
+    focus,
     created: serverTimestamp()
   });
 
@@ -312,11 +301,14 @@ export async function createPhotoPost() {
 }
 
 // ---------------------------------------------------------------------
-// LOAD FEED – matches new feed.html structure
+// LOAD FEED (filter by mood + focus)
 // ---------------------------------------------------------------------
 export async function loadFeed() {
   const container = document.getElementById("feedContainer");
-  if (!container) return;
+  if (!container) return; // not on this page
+
+  const moodFilter = localStorage.getItem("currentMood");
+  const focusFilter = localStorage.getItem("currentFocus");
 
   const postsQuery = query(
     collection(db, "posts"),
@@ -326,192 +318,73 @@ export async function loadFeed() {
   const snapshot = await getDocs(postsQuery);
   container.innerHTML = "";
 
-  snapshot.forEach(docSnap => {
+  snapshot.forEach((docSnap) => {
     const post = docSnap.data();
-    const postId = docSnap.id;
 
-    // Basic type → label mapping
-    let tagLabel = "Reflection";
-    if (post.type === "photo") tagLabel = "Photography";
+    // client-side filtering to avoid index headaches
+    if (moodFilter && post.mood && post.mood !== moodFilter) return;
+    if (focusFilter && post.focus && post.focus !== focusFilter) return;
 
-    // You can improve this later with real timestamps
-    const metaText = "You · just now";
+    const div = document.createElement("div");
+    div.className = "post";
 
-    const article = document.createElement("article");
-    article.className = "post";
-    article.dataset.postId = postId;
+    let tagsHtml = "";
+    const tags = [];
+    if (post.mood) tags.push(post.mood);
+    if (post.focus) tags.push(post.focus);
 
-    // Header
-    const header = document.createElement("div");
-    header.className = "post-header";
+    if (tags.length) {
+      tagsHtml = `<div class="tag-row">
+        ${tags.map((t) => `<span class="tag">${t}</span>`).join("")}
+      </div>`;
+    }
 
-    const meta = document.createElement("div");
-    meta.className = "post-meta";
-    meta.textContent = metaText;
-
-    const tag = document.createElement("div");
-    tag.className = "post-tag";
-    tag.innerHTML = `
-      <span class="post-tag-dot"></span>
-      <span class="post-tag-label">${tagLabel}</span>
-    `;
-
-    header.appendChild(meta);
-    header.appendChild(tag);
-
-    // Content
     if (post.type === "text") {
-      const textDiv = document.createElement("div");
-      textDiv.className = "postText";
-      textDiv.textContent = post.content || "";
-      article.appendChild(header);
-      article.appendChild(textDiv);
-    } else if (post.type === "photo") {
-      const img = document.createElement("img");
-      img.className = "postPhoto";
-      img.src = post.imageUrl;
-      img.alt = "Shared photo";
-
-      article.appendChild(header);
-      article.appendChild(img);
-    } else {
-      // Unknown type – just skip
-      return;
-    }
-
-    // Footer (no real comments yet, just placeholder)
-    const footer = document.createElement("div");
-    footer.className = "post-footer";
-
-    const commentSummary = document.createElement("div");
-    commentSummary.className = "comment-summary";
-    commentSummary.textContent = "No comments yet";
-
-    const commentBtn = document.createElement("button");
-    commentBtn.className = "comment-toggle-btn";
-    commentBtn.textContent = "Comment";
-
-    // For now, send to thread page with ?id=POST_ID
-    commentBtn.addEventListener("click", () => {
-      window.location.href = `thread.html?id=${encodeURIComponent(postId)}`;
-    });
-
-    footer.appendChild(commentSummary);
-    footer.appendChild(commentBtn);
-
-    article.appendChild(footer);
-
-    container.appendChild(article);
-  });
-}
-
-// ---------------------------------------------------------------------
-// THREAD VIEW (thread.html)
-// Collection: threads
-// Doc: { content: string, tag?: string, created, userId }
-// Subcollection: threads/{threadId}/replies with
-// { text, userId, displayName?, created }
-// ---------------------------------------------------------------------
-function getThreadIdFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id");
-}
-
-export async function loadThread() {
-  const mainPostEl = document.getElementById("mainPost");
-  const repliesEl = document.getElementById("repliesList");
-  if (!mainPostEl || !repliesEl) return; // not on thread page
-
-  const threadId = getThreadIdFromUrl();
-  if (!threadId) {
-    mainPostEl.textContent = "No thread selected.";
-    return;
-  }
-
-  try {
-    const threadRef = doc(db, "threads", threadId);
-    const snap = await getDoc(threadRef);
-
-    if (!snap.exists()) {
-      mainPostEl.textContent = "Thread not found.";
-      return;
-    }
-
-    const data = snap.data();
-
-    mainPostEl.innerHTML = `
-      <div>${data.content || ""}</div>
-      ${data.tag ? `<div class="tag">${data.tag}</div>` : ""}
-    `;
-
-    const repliesRef = collection(threadRef, "replies");
-    const q = query(repliesRef, orderBy("created", "asc"));
-    const repliesSnap = await getDocs(q);
-
-    repliesEl.innerHTML = "";
-    repliesSnap.forEach((replyDoc) => {
-      const reply = replyDoc.data();
-      const div = document.createElement("div");
-      div.className = "reply";
-      const name = reply.displayName || "Someone";
       div.innerHTML = `
-        <div class="reply-user">${name}</div>
-        <div>${reply.text || ""}</div>
+        <div class="postText">${post.content}</div>
+        ${tagsHtml || `<div class="tag">Reflection</div>`}
       `;
-      repliesEl.appendChild(div);
-    });
-  } catch (err) {
-    console.error(err);
-    mainPostEl.textContent = "Sorry, the thread could not be loaded.";
-  }
-}
+    } else if (post.type === "photo") {
+      div.innerHTML = `
+        <img src="${post.imageUrl}" class="postPhoto" />
+        ${tagsHtml || `<div class="tag">Photography</div>`}
+      `;
+    }
 
-export async function createReply() {
-  const textarea = document.getElementById("replyInput");
-  const text = textarea?.value.trim();
+    container.appendChild(div);
+  });
 
-  if (!text) return alert("Write a reply first.");
-
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in to reply.");
-
-  const threadId = getThreadIdFromUrl();
-  if (!threadId) {
-    alert("No thread selected.");
-    return;
-  }
-
-  try {
-    const threadRef = doc(db, "threads", threadId);
-    const repliesRef = collection(threadRef, "replies");
-
-    await addDoc(repliesRef, {
-      text,
-      userId: user.uid,
-      displayName: user.displayName || user.email || "Someone",
-      created: serverTimestamp()
-    });
-
-    if (textarea) textarea.value = "";
-    await loadThread();
-  } catch (err) {
-    console.error(err);
-    alert("Could not send your reply.");
+  if (!container.children.length) {
+    container.innerHTML = `<div class="empty-state">
+      No posts yet for this mood and focus.
+    </div>`;
   }
 }
 
 // ---------------------------------------------------------------------
-// Expose functions to the global window for inline HTML handlers
+// GLOBAL HOOKS FOR INLINE HTML
 // ---------------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  // mood page hydration if present
+  hydrateMoodUI();
+  // feed page load if present
+  loadFeed().catch(() => {});
+});
+
+// Make functions available to inline onclick / onload in HTML
+window.handleBegin = handleBegin;
+
 window.signUpUser = signUpUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;
-window.signOutUser = signOutUser;
+window.signOutUser = logoutUser; // alias if you use this name anywhere
+
 window.loadProfile = loadProfile;
 window.updateDisplayName = updateDisplayName;
+
 window.selectMood = selectMood;
+window.selectFocus = selectFocus;
+window.continueToFeed = continueToFeed;
+
 window.createTextPost = createTextPost;
 window.createPhotoPost = createPhotoPost;
-window.loadFeed = loadFeed;
-window.loadThread = loadThread;
-window.createReply = createReply;
