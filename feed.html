@@ -5,126 +5,71 @@
     <title>Your Feed – A Calm Corner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Firebase + app logic -->
+    <!-- Load Firebase + app logic -->
     <script type="module" src="script.js"></script>
 
     <style>
         body {
             margin: 0;
-            background: #f4f6f8;
+            background: #f5f6f8;
             color: #1d2b3a;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
             padding-bottom: 90px; /* space for bottom nav */
         }
 
         /* Header */
         .header {
+            padding: 24px 20px 14px;
+            background: #f5f6f8;
             position: sticky;
             top: 0;
-            z-index: 10;
-            background: #f4f6f8;
-            padding: 20px 18px 12px;
-        }
-
-        .header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            z-index: 2;
         }
 
         .header-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 600;
         }
 
         .header-sub {
-            margin-top: 6px;
-            font-size: 13px;
+            font-size: 14px;
             color: #4c5c6b;
+            margin-top: 4px;
         }
 
-        /* Mood button in header */
-        .mood-pill {
-            padding: 8px 14px;
-            border-radius: 999px;
-            border: 1px solid #d5dce3;
-            background: white;
-            font-size: 13px;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .mood-pill span.label {
-            opacity: 0.7;
-        }
-
-        /* Create post card / “composer” */
-        .container {
+        /* Feed container */
+        .feed-wrapper {
+            padding: 0 16px 24px;
             max-width: 420px;
             margin: 0 auto;
-            padding: 0 16px 24px;
         }
 
-        .composer-card {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 14px 14px 12px;
-            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05);
-            margin-bottom: 18px;
-            font-size: 14px;
-        }
-
-        .composer-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-
-        .composer-label {
-            font-weight: 500;
-        }
-
-        .composer-btn {
-            border: none;
-            border-radius: 999px;
-            padding: 8px 14px;
-            background: #1d2b3a;
-            color: white;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .composer-sub {
-            font-size: 12px;
-            color: #657484;
-        }
-
-        /* Feed list */
         #feedContainer {
-            max-width: 420px;
-            margin: 0 auto;
-            padding: 0 16px 24px;
+            margin-top: 8px;
         }
 
-        /* Single post card – matches what script.js renders (.post, .postText, .postPhoto, .tag) */
+        .empty-state {
+            margin-top: 40px;
+            font-size: 15px;
+            color: #647184;
+            text-align: center;
+        }
+
+        /* Post cards (matches script.js structure) */
         .post {
-            background: #ffffff;
-            border-radius: 18px;
-            padding: 14px 14px 12px;
-            margin-bottom: 14px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.4;
         }
 
         .postText {
-            font-size: 15px;
-            line-height: 1.6;
             margin-bottom: 10px;
             white-space: pre-wrap;
         }
@@ -132,8 +77,8 @@
         .postPhoto {
             width: 100%;
             border-radius: 14px;
-            display: block;
             margin-bottom: 10px;
+            display: block;
         }
 
         .tag {
@@ -141,8 +86,30 @@
             padding: 4px 10px;
             border-radius: 999px;
             background: #e8ecf0;
-            font-size: 11px;
+            font-size: 12px;
             color: #1d2b3a;
+        }
+
+        /* Floating create button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: #1d2b3a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+        }
+
+        .fab:active {
+            transform: translateY(1px);
         }
 
         /* Bottom nav */
@@ -155,7 +122,7 @@
             border-top: 1px solid #d9e0e6;
             display: flex;
             justify-content: space-around;
-            padding: 10px 0;
+            padding: 10px 0 12px;
             font-size: 13px;
         }
 
@@ -172,55 +139,30 @@
 </head>
 
 <body>
-    <!-- Header with mood button -->
+    <!-- Header with mood text (loadMood in script.js will update #focusText) -->
     <div class="header">
-        <div class="header-row">
-            <div>
-                <div class="header-title">Your corner</div>
-                <div class="header-sub">Small check-ins, whenever you need them</div>
-            </div>
-            <button class="mood-pill" id="moodButton" onclick="window.location.href='mood.html'">
-                <span class="label">Mood</span>
-                <span id="moodValue">Neutral</span>
-            </button>
-        </div>
+        <div class="header-title">Your corner</div>
+        <div id="focusText" class="header-sub">Content for: Neutral</div>
     </div>
 
-    <div class="container">
-        <!-- Composer card -->
-        <div class="composer-card">
-            <div class="composer-top">
-                <div class="composer-label">Want to share something?</div>
-                <button class="composer-btn" onclick="window.location.href='post.html'">
-                    New post
-                </button>
-            </div>
-            <div class="composer-sub">
-                It can be one sentence, a photo, or just a little moment from today.
+    <!-- Feed list -->
+    <div class="feed-wrapper">
+        <div id="feedContainer">
+            <div class="empty-state">
+                Loading your calm corner...
             </div>
         </div>
     </div>
 
-    <!-- Feed posts get injected here by script.js (loadFeed) -->
-    <div id="feedContainer"></div>
+    <!-- Create post button -->
+    <a href="post.html" class="fab">+</a>
 
-    <!-- Bottom nav -->
+    <!-- Bottom navigation -->
     <div class="nav">
         <a href="feed.html" class="active">Feed</a>
-        <a href="post.html">Post</a>
-        <a href="thread.html">Threads</a>
+        <a href="post.html">Create</a>
+        <a href="topics.html">Topics</a>
         <a href="profile.html">Profile</a>
     </div>
-
-    <!-- Inline script just for the header mood button text -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const moodBtnValue = document.getElementById("moodValue");
-            if (moodBtnValue) {
-                const mood = localStorage.getItem("currentMood") || "Neutral";
-                moodBtnValue.textContent = mood;
-            }
-        });
-    </script>
 </body>
 </html>
