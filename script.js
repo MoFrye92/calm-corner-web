@@ -309,59 +309,135 @@ export async function createPhotoPost() {
 }
 
 // ---------------------------------------------------------------------
-// LOAD FEED (feed.html)
-//  - container#feedContainer
-//  posts collection: type=text/photo, etc.
+// LOAD FEED (cards + avatar + name + comment button)
 // ---------------------------------------------------------------------
 export async function loadFeed() {
   const container = document.getElementById("feedContainer");
-  if (!container) return; // not on feed page
+  const emptyState = document.getElementById("emptyState");
+  if (!container) return;
 
-  try {
-    const postsQuery = query(
-      collection(db, "posts"),
-      orderBy("created", "desc")
-    );
-    const snapshot = await getDocs(postsQuery);
+  const postsQuery = query(
+    collection(db, "posts"),
+    orderBy("created", "desc")
+  );
 
-    container.innerHTML = "";
+  const snapshot = await getDocs(postsQuery);
+  container.innerHTML = "";
 
-    snapshot.forEach((docSnap) => {
-      const post = docSnap.data();
-      const id = docSnap.id;
+  if (snapshot.empty) {
+    if (emptyState) emptyState.style.display = "block";
+    return;
+  } else if (emptyState) {
+    emptyState.style.display = "none";
+  }
 
-      const div = document.createElement("div");
-      div.className = "post";
+  for (const docSnap of snapshot.docs) {
+    const post = docSnap.data();
+    const postId = docSnap.id;
 
-      const moodLabel = post.mood ? `<div class="tag">${post.mood}</div>` : "";
+    // Get author profile
+    let displayName = "Someone";
+    let avatarUrl = "https://via.placeholder.com/80?text=🙂";
 
-      if (post.type === "text") {
-        div.innerHTML = `
-          <div class="postText">${post.content || ""}</div>
-          ${moodLabel}
-        `;
-      } else if (post.type === "photo") {
-        div.innerHTML = `
-          <img src="${post.imageUrl}" class="postPhoto" alt="Shared photo"/>
-          ${moodLabel}
-        `;
-      } else {
-        div.innerHTML = `<div class="postText">${post.content || ""}</div>`;
+    if (post.userId) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", post.userId));
+        if (userDoc.exists()) {
+          const u = userDoc.data();
+          displayName = u.displayName || displayName;
+          avatarUrl = u.avatarUrl || avatarUrl;
+        }
+      } catch (e) {
+        console.warn("Error loading user profile", e);
       }
+    }
 
-      // Optional: clicking a post opens the thread view
-      div.onclick = () => {
-        window.location.href = `thread.html?id=${encodeURIComponent(id)}`;
-      };
+    // Card root
+    const card = document.createElement("div");
+    card.className = "post-card";
 
-      container.appendChild(div);
+    // Header
+    const header = document.createElement("div");
+    header.className = "post-header";
+
+    const avatar = document.createElement("img");
+    avatar.className = "post-avatar";
+    avatar.src = avatarUrl;
+    avatar.alt = displayName;
+
+    const userBlock = document.createElement("div");
+    userBlock.className = "post-user-block";
+
+    const nameEl = document.createElement("div");
+    nameEl.className = "post-name";
+    nameEl.textContent = displayName;
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "post-meta";
+    metaEl.textContent = "Shared a moment";
+
+    userBlock.appendChild(nameEl);
+    userBlock.appendChild(metaEl);
+
+    header.appendChild(avatar);
+    header.appendChild(userBlock);
+    card.appendChild(header);
+
+    // Body: text or photo
+    if (post.type === "text" && post.content) {
+      const bodyText = document.createElement("div");
+      bodyText.className = "post-body-text";
+      bodyText.textContent = post.content;
+      card.appendChild(bodyText);
+
+      const tag = document.createElement("div");
+      tag.className = "post-tag";
+      tag.textContent = "Reflection";
+      card.appendChild(tag);
+    } else if (post.type === "photo" && post.imageUrl) {
+      const img = document.createElement("img");
+      img.className = "post-photo";
+      img.src = post.imageUrl;
+      img.alt = "Shared photo";
+      card.appendChild(img);
+
+      const tag = document.createElement("div");
+      tag.className = "post-tag";
+      tag.textContent = "Photography";
+      card.appendChild(tag);
+    }
+
+    // Comment row (goes to thread page)
+    const commentRow = document.createElement("div");
+    commentRow.className = "comment-row";
+
+    const input = document.createElement("input");
+    input.className = "comment-input";
+    input.type = "text";
+    input.placeholder = "Write a kind reply…";
+
+    const btn = document.createElement("button");
+    btn.className = "comment-btn";
+    btn.textContent = "Send";
+
+    btn.addEventListener("click", () => {
+      const text = input.value.trim();
+      // We just navigate to thread.html; thread page handles the actual conversation
+      const url = new URL("thread.html", window.location.href);
+      url.searchParams.set("postId", postId);
+      if (post.userId) url.searchParams.set("authorId", post.userId);
+      if (text) url.searchParams.set("draft", text); // optional: pass draft text
+      window.location.href = url.toString();
     });
-  } catch (err) {
-    console.error(err);
-    container.innerHTML =
-      '<div class="postText">There was a problem loading the feed.</div>';
+
+    commentRow.appendChild(input);
+    commentRow.appendChild(btn);
+    card.appendChild(commentRow);
+
+    container.appendChild(card);
   }
 }
+
 
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
