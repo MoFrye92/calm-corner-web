@@ -340,7 +340,7 @@ export async function loadFeed() {
     if (post.type === "text") {
       contentHtml = `
         <div class="post-body">
-          <div class="post-text">${escapeHtml(post.content)}</div>
+          <div class="post-text">${escapeHtml(post.content || "")}</div>
         </div>
       `;
     } else if (post.type === "photo") {
@@ -370,14 +370,55 @@ export async function loadFeed() {
             data-post-id="${docSnap.id}"
           />
         </div>
-        <button class="thread-btn">View full thread</button>
+        <button class="thread-btn" data-post-id="${docSnap.id}">
+          View full thread
+        </button>
       </div>
     `;
+
+    // --- wire up gentle thought (quick reply) ---
+    const commentInput = card.querySelector(".comment-input");
+    commentInput.addEventListener("keydown", async (e) => {
+      if (e.key !== "Enter") return;
+
+      e.preventDefault();
+      const text = commentInput.value.trim();
+      if (!text) return;
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You need to be signed in to add a gentle thought.");
+        return;
+      }
+
+      // Store reply as a subcollection under the post
+      await addDoc(collection(db, "posts", docSnap.id, "replies"), {
+        content: text,
+        userId: user.uid,
+        created: serverTimestamp()
+      });
+
+      commentInput.value = "";
+
+      // take them straight into the thread view for that post
+      window.location.href = `thread.html?postId=${encodeURIComponent(
+        docSnap.id
+      )}`;
+    });
+
+    // --- wire up "View full thread" button ---
+    const threadBtn = card.querySelector(".thread-btn");
+    threadBtn.addEventListener("click", () => {
+      window.location.href = `thread.html?postId=${encodeURIComponent(
+        docSnap.id
+      )}`;
+    });
 
     container.appendChild(card);
   }
 }
 
+// Only runs on pages that have #feedContainer
 document.addEventListener("DOMContentLoaded", loadFeed);
 
 // ---------------------------------------------------------------------
