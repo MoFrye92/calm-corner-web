@@ -1,227 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Load Firebase + your app logic -->
+    <script type="module" src="script.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>A Calm Corner – Login</title>
+    <title>A Calm Corner</title>
 
     <style>
-        :root {
-            --bg: #f4f6f8;
-            --fg: #1d2b3a;
-            --muted: #4c5c6b;
-            --surface: #ffffff;
-            --accent: #1d2b3a;
-            --radius-lg: 14px;
-            --shadow-soft: 0 4px 12px rgba(0,0,0,0.06);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             margin: 0;
-            background: var(--bg);
-            color: var(--fg);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-                Roboto, Helvetica, Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1d2b3a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
             height: 100vh;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 360px;
-            width: 100%;
+            align-items: center;
             text-align: center;
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        .logo {
-            font-size: 26px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-
-        h1 {
-            font-size: 22px;
-            margin: 10px 0 6px;
-        }
-
-        .subtitle {
-            color: var(--muted);
-            font-size: 14px;
-            margin-bottom: 24px;
-        }
-
-        .form {
-            background: var(--surface);
             padding: 20px;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-soft);
-            text-align: left;
-        }
-
-        .form label {
-            display: block;
-            margin-top: 12px;
-            font-size: 13px;
-            margin-bottom: 6px;
-        }
-
-        .form input {
-            width: 100%;
-            padding: 11px 12px;
-            border-radius: 10px;
-            border: 1px solid #d9e0e6;
-            font-size: 14px;
-            outline: none;
-            background: #f9fafb;
-        }
-
-        .form input:focus {
-            border-color: var(--accent);
-            background: #ffffff;
-        }
-
-        .btn {
-            margin-top: 18px;
-            width: 100%;
-            padding: 13px;
-            border-radius: 12px;
-            border: none;
-            background: var(--accent);
-            color: white;
-            font-size: 15px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: opacity 0.18s ease, transform 0.06s ease;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: default;
-            transform: none;
-        }
-
-        .btn:not(:disabled):hover {
-            opacity: 0.9;
-        }
-
-        .btn:not(:disabled):active {
-            transform: translateY(1px);
-        }
-
-        .signup-link {
-            margin-top: 18px;
-            display: block;
-            color: var(--muted);
-            font-size: 14px;
-            text-decoration: none;
-        }
-
-        .signup-link span {
-            text-decoration: underline;
-        }
-
-        .error {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #b3261e;
-            min-height: 18px;
+            animation: fadeIn 1.2s ease;
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .container {
+            max-width: 340px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .tagline {
+            font-size: 15px;
+            color: #4c5c6b;
+            margin-bottom: 40px;
+        }
+
+        .start-btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #1d2b3a;
+            color: white;
+            border-radius: 14px;
+            font-size: 15px;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .start-btn:hover {
+            opacity: 0.85;
+        }
+
+        .returning {
+            margin-top: 14px;
+            font-size: 13px;
+            color: #4c5c6b;
+        }
+
+        .returning a {
+            color: #1d2b3a;
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-<main class="container">
-    <div class="logo">A Calm Corner</div>
-    <h1>Welcome back</h1>
-    <div class="subtitle">Log in to your calm space</div>
+    <div class="container">
+        <div class="logo">A Calm Corner</div>
+        <div class="tagline">
+            A gentle place to check in with your mood and share small, quiet posts.
+        </div>
 
-    <!-- Using a real form so Enter key works -->
-    <form class="form" id="loginForm" novalidate>
-        <label for="loginEmail">Email</label>
-        <input
-            id="loginEmail"
-            name="email"
-            type="email"
-            placeholder="you@example.com"
-            autocomplete="email"
-            required
-        />
+        <a href="signup.html" class="start-btn">Start your check-in</a>
 
-        <label for="loginPassword">Password</label>
-        <input
-            id="loginPassword"
-            name="password"
-            type="password"
-            placeholder="••••••••"
-            autocomplete="current-password"
-            required
-        />
-
-        <button class="btn" id="loginBtn" type="submit">
-            Log in
-        </button>
-
-        <div class="error" id="loginError"></div>
-    </form>
-
-    <a class="signup-link" href="signup.html">
-        Don’t have an account? <span>Sign up</span>
-    </a>
-</main>
-
-<!-- Page-specific wiring into your shared Firebase script -->
-<script type="module">
-    import { loginUser } from "./script.js";
-
-    const form = document.getElementById("loginForm");
-    const btn = document.getElementById("loginBtn");
-    const errorEl = document.getElementById("loginError");
-    const emailInput = document.getElementById("loginEmail");
-    const passwordInput = document.getElementById("loginPassword");
-
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-
-        // basic front-end validation
-        if (!emailInput.value.trim() || !passwordInput.value.trim()) {
-            errorEl.textContent = "Please enter both email and password.";
-            return;
-        }
-
-        errorEl.textContent = "";
-        btn.disabled = true;
-
-        try {
-            // Uses your existing loginUser() from script.js
-            await loginUser();
-        } catch (e) {
-            // If you later change loginUser to throw, we show something nice here.
-            errorEl.textContent = e?.message || "Something went wrong logging you in.";
-            btn.disabled = false;
-        }
-    };
-
-    if (form) {
-        form.addEventListener("submit", handleSubmit);
-    }
-</script>
+        <div class="returning">
+            Already have an account?
+            <a href="signup.html">Log in here</a>
+        </div>
+    </div>
 </body>
 </html>
