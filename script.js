@@ -36,10 +36,8 @@ import {
 // ---------------------------
 // Your Firebase Config
 // ---------------------------
-// 🔴 IMPORTANT: Replace the values below with the config from your Firebase console
-// (Project settings → General → Your apps → Web app → Firebase SDK snippet v9+)
 const firebaseConfig = {
- apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
+  apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
   authDomain: "calm-corner-e92e0.firebaseapp.com",
   projectId: "calm-corner-e92e0",
   storageBucket: "calm-corner-e92e0.firebasestorage.app",
@@ -109,29 +107,40 @@ function loadProfile() {
       return;
     }
 
-    const userSnap = await getDoc(doc(db, "users", user.uid));
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
 
     // If no Firestore document yet, seed it
     if (!userSnap.exists()) {
-      await setDoc(doc(db, "users", user.uid), {
-        displayName: user.displayName || user.email.split("@")[0],
+      await setDoc(userRef, {
+        displayName:
+          user.displayName ||
+          (user.email ? user.email.split("@")[0] : user.uid),
         email: user.email,
         avatarUrl: user.photoURL || ""
       });
     }
 
-    const data = (await getDoc(doc(db, "users", user.uid))).data();
+    const data = (await getDoc(userRef)).data();
 
     const nameEl = document.getElementById("displayName");
     const emailEl = document.getElementById("emailField");
     const avatarEl = document.getElementById("avatarImg");
     const avatarInput = document.getElementById("avatarInput");
 
-    if (nameEl) nameEl.textContent = data.displayName || "Anonymous";
+    const effectiveDisplayName =
+      data.displayName ||
+      user.displayName ||
+      (user.email ? user.email.split("@")[0] : "") ||
+      user.uid;
+
+    if (nameEl) nameEl.textContent = effectiveDisplayName;
     if (emailEl) emailEl.textContent = data.email || "";
+
     if (avatarEl) {
-      avatarEl.src =
-        data.avatarUrl || user.photoURL || "https://via.placeholder.com/100?text=Avatar";
+      const resolvedAvatarUrl =
+        data.avatarUrl || user.photoURL || "default.png";
+      avatarEl.src = resolvedAvatarUrl;
     }
 
     if (avatarInput) {
@@ -199,259 +208,279 @@ document.addEventListener("DOMContentLoaded", loadMood);
 // CREATE POSTS
 // ---------------------------------------------------------------------
 export async function createTextPost() {
-    const input = document.getElementById("textPostInput");
-    const text = input.value.trim();
+  const input = document.getElementById("textPostInput");
+  const text = input.value.trim();
 
-    if (!text) return alert("Write something first.");
+  if (!text) return alert("Write something first.");
 
-    const user = auth.currentUser;
-    if (!user) return alert("You must be logged in.");
+  const user = auth.currentUser;
+  if (!user) return alert("You must be logged in.");
 
-    // get user profile from Firestore
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const profile = userDoc.exists() ? userDoc.data() : {};
+  // get user profile from Firestore
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const profile = userDoc.exists() ? userDoc.data() : {};
 
-    const displayName =
-        profile.displayName ||
-        user.displayName ||
-        (user.email ? user.email.split("@")[0] : "Anonymous");
+  const displayName =
+    profile.displayName ||
+    user.displayName ||
+    (user.email ? user.email.split("@")[0] : "") ||
+    user.uid;
 
-    const avatarUrl =
-        profile.avatarUrl ||
-        user.photoURL ||
-        "";
+  const avatarUrl =
+    profile.avatarUrl ||
+    user.photoURL ||
+    "";
 
-    await addDoc(collection(db, "posts"), {
-        type: "text",
-        content: text,
-        userId: user.uid,
-        userDisplayName: displayName,
-        userAvatarUrl: avatarUrl,
-        created: serverTimestamp()
-    });
+  await addDoc(collection(db, "posts"), {
+    type: "text",
+    content: text,
+    userId: user.uid,
+    userDisplayName: displayName,
+    userAvatarUrl: avatarUrl,
+    created: serverTimestamp()
+  });
 
-    input.value = "";
-    window.location.href = "feed.html";
+  input.value = "";
+  window.location.href = "feed.html";
 }
 
 export async function createPhotoPost() {
-    const input = document.getElementById("photoPostInput");
-    if (!input.files.length) return alert("Upload a photo first.");
+  const input = document.getElementById("photoPostInput");
+  if (!input.files.length) return alert("Upload a photo first.");
 
-    const file = input.files[0];
-    const user = auth.currentUser;
-    if (!user) return alert("You must be logged in.");
+  const file = input.files[0];
+  const user = auth.currentUser;
+  if (!user) return alert("You must be logged in.");
 
-    // get user profile from Firestore
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const profile = userDoc.exists() ? userDoc.data() : {};
+  // get user profile from Firestore
+  const userDoc = await getDoc(doc(db, "users", user.uid));
+  const profile = userDoc.exists() ? userDoc.data() : {};
 
-    const displayName =
-        profile.displayName ||
-        user.displayName ||
-        (user.email ? user.email.split("@")[0] : "Anonymous");
+  const displayName =
+    profile.displayName ||
+    user.displayName ||
+    (user.email ? user.email.split("@")[0] : "") ||
+    user.uid;
 
-    const avatarUrl =
-        profile.avatarUrl ||
-        user.photoURL ||
-        "";
+  const avatarUrl =
+    profile.avatarUrl ||
+    user.photoURL ||
+    "";
 
-    // upload image
-    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const url = await getDownloadURL(storageRef);
+  // upload image
+  const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
 
-    await addDoc(collection(db, "posts"), {
-        type: "photo",
-        imageUrl: url,
-        userId: user.uid,
-        userDisplayName: displayName,
-        userAvatarUrl: avatarUrl,
-        created: serverTimestamp(),
-    });
+  await addDoc(collection(db, "posts"), {
+    type: "photo",
+    imageUrl: url,
+    userId: user.uid,
+    userDisplayName: displayName,
+    userAvatarUrl: avatarUrl,
+    created: serverTimestamp()
+  });
 
-    input.value = "";
-    window.location.href = "feed.html";
+  input.value = "";
+  window.location.href = "feed.html";
 }
 
 // ---------------------------------------------------------------------
 // LOAD FEED
 // ---------------------------------------------------------------------
-export async function loadFeed() {
-    const container = document.getElementById("feedContainer");
-    if (!container) return;
-
-    const postsQuery = query(
-        collection(db, "posts"),
-        orderBy("created", "desc")
-    );
-
-    const snapshot = await getDocs(postsQuery);
-    container.innerHTML = "";
-
-    snapshot.forEach(docSnap => {
-        const post = docSnap.data();
-
-        const div = document.createElement("div");
-        div.className = "post-card";
-
-        const name = post.userDisplayName || "Anonymous";
-        const avatar =
-            post.userAvatarUrl ||
-            "https://via.placeholder.com/40?text=U";
-
-        let bodyHtml = "";
-
-        if (post.type === "text") {
-            bodyHtml = `
-                <div class="post-caption">
-                    ${post.content}
-                </div>
-            `;
-        } else if (post.type === "photo") {
-            bodyHtml = `
-                <div class="post-photo-wrapper">
-                    <img src="${post.imageUrl}" class="post-photo" alt="Post image" />
-                </div>
-            `;
-        }
-
-        div.innerHTML = `
-            <div class="post-header">
-                <img class="post-avatar" src="${avatar}" alt="${name}" />
-                <div class="post-user">
-                    <div class="post-name">${name}</div>
-                </div>
-            </div>
-
-            ${bodyHtml}
-
-            <div class="post-footer">
-                <!-- simple “spot for comments” -->
-                <div class="comments-preview">
-                    <span class="comments-label">Comments</span>
-                    <input
-                        class="comment-input"
-                        type="text"
-                        placeholder="Add a gentle thought..."
-                        disabled
-                    />
-                </div>
-                <button
-                    class="comments-button"
-                    onclick="window.location.href='thread.html?id=${docSnap.id}'"
-                >
-                    View full thread
-                </button>
-            </div>
-        `;
-
-        container.appendChild(div);
-    });
+// Simple helper so post text can't inject HTML
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
 }
 
-// Run on every page, but will only do work if #feedContainer exists
+export async function loadFeed() {
+  const container = document.getElementById("feedContainer");
+  if (!container) return;
+
+  const postsQuery = query(
+    collection(db, "posts"),
+    orderBy("created", "desc")
+  );
+
+  const snapshot = await getDocs(postsQuery);
+  container.innerHTML = "";
+
+  const userCache = {}; // userId -> user data
+
+  for (const docSnap of snapshot.docs) {
+    const post = docSnap.data();
+
+    // --- look up user info ---
+    // default: show userId if we have it, otherwise "Anonymous"
+    let userName = post.userId || "Anonymous";
+    let avatarUrl = "default.png"; // default pic only when no avatar stored
+
+    if (post.userId) {
+      if (!userCache[post.userId]) {
+        const userDoc = await getDoc(doc(db, "users", post.userId));
+        userCache[post.userId] = userDoc.exists() ? userDoc.data() : null;
+      }
+      const u = userCache[post.userId];
+      if (u) {
+        if (u.displayName) {
+          userName = u.displayName;
+        }
+        if (u.avatarUrl) {
+          avatarUrl = u.avatarUrl;
+        }
+      }
+    }
+
+    const card = document.createElement("div");
+    card.className = "post-card";
+
+    let contentHtml = "";
+    if (post.type === "text") {
+      contentHtml = `
+        <div class="post-body">
+          <div class="post-text">${escapeHtml(post.content)}</div>
+        </div>
+      `;
+    } else if (post.type === "photo") {
+      contentHtml = `
+        <div class="post-body">
+          <img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />
+        </div>
+      `;
+    }
+
+    card.innerHTML = `
+      <div class="post-header">
+        <img class="avatar" src="${avatarUrl}" alt="${userName}'s avatar" />
+        <div class="post-meta">
+          <div class="post-username">${userName}</div>
+        </div>
+      </div>
+
+      ${contentHtml}
+
+      <div class="post-footer">
+        <div class="comment-row">
+          <input
+            type="text"
+            class="comment-input"
+            placeholder="Add a gentle thought..."
+            data-post-id="${docSnap.id}"
+          />
+        </div>
+        <button class="thread-btn">View full thread</button>
+      </div>
+    `;
+
+    container.appendChild(card);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", loadFeed);
+
 // ---------------------------------------------------------------------
 // THREAD VIEW (single post + replies)
 // ---------------------------------------------------------------------
 export async function loadThread() {
-    const mainDiv = document.getElementById("mainPost");
-    const repliesDiv = document.getElementById("repliesList");
-    if (!mainDiv || !repliesDiv) return;
+  const mainDiv = document.getElementById("mainPost");
+  const repliesDiv = document.getElementById("repliesList");
+  if (!mainDiv || !repliesDiv) return;
 
-    // get thread id from ?id= in the URL, e.g. thread.html?id=ABC123
-    const params = new URLSearchParams(window.location.search);
-    const threadId = params.get("id");
+  // get thread id from ?id= in the URL, e.g. thread.html?id=ABC123
+  const params = new URLSearchParams(window.location.search);
+  const threadId = params.get("id");
 
-    if (!threadId) {
-        mainDiv.textContent = "No thread selected.";
-        return;
-    }
+  if (!threadId) {
+    mainDiv.textContent = "No thread selected.";
+    return;
+  }
 
-    // load main post from "posts" collection
-    const postSnap = await getDoc(doc(db, "posts", threadId));
-    if (!postSnap.exists()) {
-        mainDiv.textContent = "This post could not be found.";
-        return;
-    }
+  // load main post from "posts" collection
+  const postSnap = await getDoc(doc(db, "posts", threadId));
+  if (!postSnap.exists()) {
+    mainDiv.textContent = "This post could not be found.";
+    return;
+  }
 
-    const post = postSnap.data();
-    mainDiv.innerHTML = `
-        <div>${post.content || ""}</div>
-        <div class="tag">Reflection</div>
+  const post = postSnap.data();
+  mainDiv.innerHTML = `
+    <div>${post.content || ""}</div>
+    <div class="tag">Reflection</div>
+  `;
+
+  // load replies from subcollection posts/{threadId}/replies
+  const repliesQuery = query(
+    collection(db, "posts", threadId, "replies"),
+    orderBy("created", "asc")
+  );
+
+  const snap = await getDocs(repliesQuery);
+  repliesDiv.innerHTML = "";
+
+  snap.forEach((docSnap) => {
+    const reply = docSnap.data();
+    const div = document.createElement("div");
+    div.className = "reply";
+
+    const name = reply.authorName || "Anonymous";
+
+    div.innerHTML = `
+      <div class="reply-user">${name}</div>
+      <div>${reply.text}</div>
     `;
-
-    // load replies from subcollection posts/{threadId}/replies
-    const repliesQuery = query(
-        collection(db, "posts", threadId, "replies"),
-        orderBy("created", "asc")
-    );
-
-    const snap = await getDocs(repliesQuery);
-    repliesDiv.innerHTML = "";
-
-    snap.forEach((docSnap) => {
-        const reply = docSnap.data();
-        const div = document.createElement("div");
-        div.className = "reply";
-
-        const name = reply.authorName || "Anonymous";
-
-        div.innerHTML = `
-            <div class="reply-user">${name}</div>
-            <div>${reply.text}</div>
-        `;
-        repliesDiv.appendChild(div);
-    });
+    repliesDiv.appendChild(div);
+  });
 }
 
 export async function createReply() {
-    const input = document.getElementById("replyInput");
-    if (!input) return;
+  const input = document.getElementById("replyInput");
+  if (!input) return;
 
-    const text = input.value.trim();
-    if (!text) return;
+  const text = input.value.trim();
+  if (!text) return;
 
-    const user = auth.currentUser;
-    if (!user) {
-        alert("You need to be logged in to reply.");
-        return;
-    }
+  const user = auth.currentUser;
+  if (!user) {
+    alert("You need to be logged in to reply.");
+    return;
+  }
 
-    const params = new URLSearchParams(window.location.search);
-    const threadId = params.get("id");
-    if (!threadId) {
-        alert("No thread selected.");
-        return;
-    }
+  const params = new URLSearchParams(window.location.search);
+  const threadId = params.get("id");
+  if (!threadId) {
+    alert("No thread selected.");
+    return;
+  }
 
-    await addDoc(collection(db, "posts", threadId, "replies"), {
-        text,
-        authorId: user.uid,
-        authorName: user.displayName || user.email || "Anonymous",
-        created: serverTimestamp(),
-    });
+  const authorName =
+    user.displayName ||
+    (user.email ? user.email.split("@")[0] : "") ||
+    user.uid;
 
-    input.value = "";
-    // reload replies
-    loadThread();
+  await addDoc(collection(db, "posts", threadId, "replies"), {
+    text,
+    authorId: user.uid,
+    authorName,
+    created: serverTimestamp()
+  });
+
+  input.value = "";
+  // reload replies
+  loadThread();
 }
 
-// make these usable from inline HTML handlers
-window.loadThread = loadThread;
-window.createReply = createReply;
 // ---------------------------------------------------------------------
 // EXPOSE FUNCTIONS TO HTML (onclick / onload)
 // ---------------------------------------------------------------------
-// expose functions for inline HTML handlers
-window.signUpUser      = signUpUser;
-window.loginUser       = loginUser;
-window.logoutUser      = logoutUser;
-window.selectMood      = selectMood;
-window.createTextPost  = createTextPost;
-window.createPhotoPost = createPhotoPost;
+window.signUpUser        = signUpUser;
+window.loginUser         = loginUser;
+window.logoutUser        = logoutUser;
+window.selectMood        = selectMood;
+window.createTextPost    = createTextPost;
+window.createPhotoPost   = createPhotoPost;
 window.updateDisplayName = updateDisplayName;
-// thread handlers already added above:
-// window.loadThread = loadThread;
-// window.createReply = createReply;
+window.loadProfile       = loadProfile;
+window.loadThread        = loadThread;
+window.createReply       = createReply;
