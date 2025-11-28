@@ -2,376 +2,162 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Home – A Calm Corner</title>
+    <title>Your Feed – A Calm Corner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <!-- Firebase app logic -->
+    <!-- Firebase + app logic -->
     <script type="module" src="script.js"></script>
 
     <style>
-        :root {
-            --bg: #f4f6f8;
-            --card: #ffffff;
-            --text-main: #1d2b3a;
-            --text-soft: #4c5c6b;
-            --accent: #1d2b3a;
-            --border-subtle: #dce2ea;
-            --radius-lg: 18px;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             margin: 0;
-            background: var(--bg);
-            color: var(--text-main);
+            background: #f5f6f8;
+            color: #1d2b3a;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding-bottom: 96px; /* space for tab bar */
+            padding-bottom: 90px; /* room for bottom nav */
         }
 
         /* Header */
         .header {
+            background: white;
+            padding: 24px 20px 16px;
             position: sticky;
             top: 0;
-            z-index: 5;
-            padding: 20px 20px 14px;
-            background: rgba(244, 246, 248, 0.98);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid #e2e8f0;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
 
         .header-title {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 600;
         }
 
         .header-sub {
-            margin-top: 4px;
-            font-size: 13px;
-            color: var(--text-soft);
-        }
-
-        /* Content */
-        .content {
-            padding: 14px 16px 24px;
-            max-width: 480px;
-            width: 100%;
-            margin: 0 auto;
-        }
-
-        .mood-banner {
-            background: var(--card);
-            border-radius: var(--radius-lg);
-            padding: 14px 16px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.05);
-            margin-bottom: 18px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mood-pill {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            background: #e3edf9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .mood-text-main {
             font-size: 14px;
-            font-weight: 600;
+            color: #4c5c6b;
+            margin-top: 4px;
         }
 
-        .mood-text-sub {
-            font-size: 12px;
-            color: var(--text-soft);
+        /* Main feed layout */
+        .container {
+            max-width: 420px;
+            margin: 10px auto 0;
+            padding: 0 16px 20px;
         }
 
-        /* Feed */
-        .feed-section-title {
-            font-size: 15px;
-            font-weight: 600;
-            margin: 8px 2px 10px;
-        }
-
-        #feedContainer {
+        .toolbar {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            justify-content: flex-end;
+            margin-bottom: 12px;
+        }
+
+        .pill-btn {
+            font-size: 13px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid #d4dce3;
+            background: #ffffff;
+            text-decoration: none;
+            color: #1d2b3a;
+        }
+
+        .pill-btn:hover {
+            background: #f0f3f6;
+        }
+
+        /* Posts */
+        #feedContainer {
+            margin-top: 4px;
         }
 
         .post {
-            background: var(--card);
-            border-radius: var(--radius-lg);
-            padding: 14px 16px 10px;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
-        }
-
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .post-meta {
-            font-size: 12px;
-            color: var(--text-soft);
-        }
-
-        .post-tag {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: #e8ecf2;
-            color: var(--text-main);
-        }
-
-        .post-tag-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            background: #8ba3c4;
+            background: white;
+            padding: 16px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
         }
 
         .postText {
-            font-size: 14px;
-            line-height: 1.5;
-            margin: 6px 0 10px;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 8px;
         }
 
         .postPhoto {
             width: 100%;
-            border-radius: 14px;
-            margin: 8px 0 10px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .post-footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 8px;
-            border-top: 1px solid #edf0f4;
-            gap: 10px;
-        }
-
-        .comment-summary {
-            font-size: 12px;
-            color: var(--text-soft);
-        }
-
-        .comment-toggle-btn {
-            border: none;
-            background: transparent;
-            font-size: 12px;
-            color: var(--accent);
-            font-weight: 500;
-            padding: 6px 0;
-            cursor: pointer;
-        }
-
-        /* Comments */
-        .comments {
+        .tag {
+            display: inline-block;
             margin-top: 4px;
-            padding-top: 8px;
-            border-top: 1px solid #edf0f4;
-        }
-
-        .comment-item {
-            font-size: 13px;
-            padding: 6px 0;
-            border-bottom: 1px solid #f1f3f7;
-        }
-
-        .comment-item:last-child {
-            border-bottom: none;
-        }
-
-        .comment-author {
-            font-weight: 600;
-            margin-right: 4px;
-        }
-
-        .add-comment-row {
-            margin-top: 6px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .add-comment-input {
-            flex: 1;
+            padding: 4px 10px;
             border-radius: 999px;
-            border: 1px solid #dde3eb;
-            padding: 7px 10px;
-            font-size: 13px;
-            outline: none;
-            background: #f9fafb;
-        }
-
-        .add-comment-btn {
-            border-radius: 999px;
-            border: none;
-            padding: 7px 12px;
             font-size: 12px;
-            font-weight: 500;
-            background: var(--accent);
-            color: #fff;
-            cursor: pointer;
+            background: #e8ecf0;
+            color: #1d2b3a;
         }
 
-        .add-comment-btn:active {
-            transform: scale(0.98);
+        .empty-state {
+            font-size: 14px;
+            color: #4c5c6b;
+            text-align: center;
+            margin-top: 40px;
         }
 
-        /* -----------------------------
-           Bottom Tab Bar (iOS-style)
-        ------------------------------ */
-        .tab-bar-shell {
+        /* Bottom nav (same pattern as other pages) */
+        .nav {
             position: fixed;
+            bottom: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            padding: 6px 18px calc(12px + env(safe-area-inset-bottom, 0px));
-            background: transparent;
-            z-index: 20;
-        }
-
-        .tab-bar {
-            max-width: 480px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.25);
-            padding: 8px 10px;
+            background: white;
+            border-top: 1px solid #d9e0e6;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: space-around;
+            padding: 12px 0;
+            font-size: 13px;
         }
 
-        .tab-link {
-            flex: 1;
+        .nav a {
+            color: #4c5c6b;
             text-decoration: none;
-            color: #64748b;
-            font-size: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 3px;
         }
 
-        .tab-icon {
-            font-size: 18px;
-            line-height: 1;
-        }
-
-        .tab-link span {
-            letter-spacing: 0.02em;
-        }
-
-        .tab-link.active {
-            color: var(--accent);
+        .nav a.active {
             font-weight: 600;
-        }
-
-        .tab-link.active .tab-icon {
-            transform: translateY(-1px);
+            color: #1d2b3a;
         }
     </style>
 </head>
 
 <body>
-    <header class="header">
-        <div class="header-title">A Calm Corner</div>
-        <div class="header-sub">See what’s on your mind today</div>
-    </header>
+    <div class="header">
+        <div class="header-title">Your Feed</div>
+        <div class="header-sub">A quiet place to share and reflect</div>
+    </div>
 
-    <main class="content">
-        <!-- Mood banner uses #focusText which script.js updates in loadMood() -->
-        <section class="mood-banner">
-            <div class="mood-pill">🧘‍♀️</div>
-            <div>
-                <div class="mood-text-main" id="focusText">Checking in with you…</div>
-                <div class="mood-text-sub">Tap “New post” to jot down a thought.</div>
-            </div>
-        </section>
+    <div class="container">
+        <div class="toolbar">
+            <a href="post.html" class="pill-btn">+ New post</a>
+        </div>
 
-        <div class="feed-section-title">Your gentle feed</div>
+        <!-- Posts will be injected here by loadFeed() in script.js -->
+        <div id="feedContainer">
+            <div class="empty-state">Loading your calm corner…</div>
+        </div>
+    </div>
 
-        <!-- Populated by script.js: loadFeed() -->
-        <section id="feedContainer">
-            <!-- Example structure JS should produce for each post:
-
-            <article class="post" data-post-id="...">
-                <div class="post-header">
-                    <div class="post-meta">You · just now</div>
-                    <div class="post-tag">
-                        <span class="post-tag-dot"></span>
-                        <span class="post-tag-label">Reflection</span>
-                    </div>
-                </div>
-
-                <div class="postText">Post text goes here…</div>
-
-                <div class="post-footer">
-                    <div class="comment-summary">No comments yet</div>
-                    <button class="comment-toggle-btn">Comment</button>
-                </div>
-
-                <div class="comments">
-                    <div class="comment-item">
-                        <span class="comment-author">You</span>
-                        <span>This is a sample comment.</span>
-                    </div>
-
-                    <div class="add-comment-row">
-                        <input class="add-comment-input" placeholder="Add a gentle reply…" />
-                        <button class="add-comment-btn">Send</button>
-                    </div>
-                </div>
-            </article>
-
-            -->
-        </section>
-    </main>
-
-    <!-- Bottom iOS-style tab bar -->
-    <div class="tab-bar-shell">
-        <nav class="tab-bar">
-            <a href="feed.html" class="tab-link active">
-                <div class="tab-icon">🏠</div>
-                <span>Home</span>
-            </a>
-            <a href="post.html" class="tab-link">
-                <div class="tab-icon">✍️</div>
-                <span>New</span>
-            </a>
-            <a href="topics.html" class="tab-link">
-                <div class="tab-icon">🌱</div>
-                <span>Topics</span>
-            </a>
-            <a href="prefs.html" class="tab-link">
-                <div class="tab-icon">🎧</div>
-                <span>Prefs</span>
-            </a>
-            <a href="profile.html" class="tab-link">
-                <div class="tab-icon">👤</div>
-                <span>Profile</span>
-            </a>
-        </nav>
+    <!-- Bottom navigation -->
+    <div class="nav">
+        <a href="feed.html" class="active">Feed</a>
+        <a href="mood.html">Mood</a>
+        <a href="post.html">Create</a>
+        <a href="topics.html">Topics</a>
+        <a href="profile.html">Profile</a>
     </div>
 </body>
 </html>
