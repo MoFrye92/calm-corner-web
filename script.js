@@ -204,222 +204,131 @@ function loadMood() {
 // Run on every page, but it only updates if #focusText exists
 document.addEventListener("DOMContentLoaded", loadMood);
 
+// TAG MAP
+const TAGS_BY_MOOD = {
+    "Calm": ["#calm", "#mindfulness"],
+    "Inspired": ["#inspiration", "#motivation"],
+    "Stressed": ["#stress", "#support"],
+    "Happy": ["#joy", "#gratitude"],
+    "Neutral": ["#reflection"]
+};
+
 // ---------------------------------------------------------------------
-// CREATE POSTS
+// CREATE POSTS (TEXT)
 // ---------------------------------------------------------------------
 export async function createTextPost() {
-  const input = document.getElementById("textPostInput");
-  const text = input.value.trim();
+    const input = document.getElementById("textPostInput");
+    const text = input.value.trim();
+    if (!text) return alert("Write something first.");
 
-  if (!text) return alert("Write something first.");
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
 
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const mood = localStorage.getItem("currentMood") || "Neutral";
+    const tags = TAGS_BY_MOOD[mood] || ["#reflection"];
 
-  // get user profile from Firestore
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const profile = userDoc.exists() ? userDoc.data() : {};
-
-  const displayName =
-    profile.displayName ||
-    user.displayName ||
-    (user.email ? user.email.split("@")[0] : "") ||
-    user.uid;
-
-  const avatarUrl =
-    profile.avatarUrl ||
-    user.photoURL ||
-    "";
-
-  await addDoc(collection(db, "posts"), {
-    type: "text",
-    content: text,
-    userId: user.uid,
-    userDisplayName: displayName,
-    userAvatarUrl: avatarUrl,
-    created: serverTimestamp()
-  });
-
-  input.value = "";
-  window.location.href = "feed.html";
-}
-
-export async function createPhotoPost() {
-  const input = document.getElementById("photoPostInput");
-  if (!input.files.length) return alert("Upload a photo first.");
-
-  const file = input.files[0];
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
-
-  // get user profile from Firestore
-  const userDoc = await getDoc(doc(db, "users", user.uid));
-  const profile = userDoc.exists() ? userDoc.data() : {};
-
-  const displayName =
-    profile.displayName ||
-    user.displayName ||
-    (user.email ? user.email.split("@")[0] : "") ||
-    user.uid;
-
-  const avatarUrl =
-    profile.avatarUrl ||
-    user.photoURL ||
-    "";
-
-  // upload image
-  const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-
-  await addDoc(collection(db, "posts"), {
-    type: "photo",
-    imageUrl: url,
-    userId: user.uid,
-    userDisplayName: displayName,
-    userAvatarUrl: avatarUrl,
-    created: serverTimestamp()
-  });
-
-  input.value = "";
-  window.location.href = "feed.html";
-}
-
-// ---------------------------------------------------------------------
-// LOAD FEED
-// ---------------------------------------------------------------------
-// Simple helper so post text can't inject HTML
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-export async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  if (!container) return;
-
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
-
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
-
-  const userCache = {}; // userId -> user data
-
-  for (const docSnap of snapshot.docs) {
-    const post = docSnap.data();
-
-    // --- look up user info ---
-    // default: show userId if we have it, otherwise "Anonymous"
-    let userName = post.userId || "Anonymous";
-    let avatarUrl = "default.png"; // default pic only when no avatar stored
-
-    if (post.userId) {
-      if (!userCache[post.userId]) {
-        const userDoc = await getDoc(doc(db, "users", post.userId));
-        userCache[post.userId] = userDoc.exists() ? userDoc.data() : null;
-      }
-      const u = userCache[post.userId];
-      if (u) {
-        if (u.displayName) {
-          userName = u.displayName;
-        }
-        if (u.avatarUrl) {
-          avatarUrl = u.avatarUrl;
-        }
-      }
-    }
-
-    const card = document.createElement("div");
-    card.className = "post-card";
-
-    let contentHtml = "";
-    if (post.type === "text") {
-      contentHtml = `
-        <div class="post-body">
-          <div class="post-text">${escapeHtml(post.content || "")}</div>
-        </div>
-      `;
-    } else if (post.type === "photo") {
-      contentHtml = `
-        <div class="post-body">
-          <img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />
-        </div>
-      `;
-    }
-
-    card.innerHTML = `
-      <div class="post-header">
-        <img class="avatar" src="${avatarUrl}" alt="${userName}'s avatar" />
-        <div class="post-meta">
-          <div class="post-username">${userName}</div>
-        </div>
-      </div>
-
-      ${contentHtml}
-
-      <div class="post-footer">
-        <div class="comment-row">
-          <input
-            type="text"
-            class="comment-input"
-            placeholder="Add a gentle thought..."
-            data-post-id="${docSnap.id}"
-          />
-        </div>
-        <button class="thread-btn" data-post-id="${docSnap.id}">
-          View full thread
-        </button>
-      </div>
-    `;
-
-    // --- wire up gentle thought (quick reply) ---
-    const commentInput = card.querySelector(".comment-input");
-    commentInput.addEventListener("keydown", async (e) => {
-      if (e.key !== "Enter") return;
-
-      e.preventDefault();
-      const text = commentInput.value.trim();
-      if (!text) return;
-
-      const user = auth.currentUser;
-      if (!user) {
-        alert("You need to be signed in to add a gentle thought.");
-        return;
-      }
-
-      // Store reply as a subcollection under the post
-      await addDoc(collection(db, "posts", docSnap.id, "replies"), {
+    await addDoc(collection(db, "posts"), {
+        type: "text",
         content: text,
+        tags: tags,
         userId: user.uid,
         created: serverTimestamp()
-      });
-
-      commentInput.value = "";
-
-      // take them straight into the thread view for that post
-      window.location.href = `thread.html?postId=${encodeURIComponent(
-        docSnap.id
-      )}`;
     });
 
-    // --- wire up "View full thread" button ---
-    const threadBtn = card.querySelector(".thread-btn");
-    threadBtn.addEventListener("click", () => {
-      window.location.href = `thread.html?postId=${encodeURIComponent(
-        docSnap.id
-      )}`;
-    });
-
-    container.appendChild(card);
-  }
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
-// Only runs on pages that have #feedContainer
-document.addEventListener("DOMContentLoaded", loadFeed);
+// ---------------------------------------------------------------------
+// CREATE PHOTO POSTS
+// ---------------------------------------------------------------------
+export async function createPhotoPost() {
+    const input = document.getElementById("photoPostInput");
+    if (!input.files.length) return alert("Upload a photo first.");
+
+    const file = input.files[0];
+    const user = auth.currentUser;
+
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    const mood = localStorage.getItem("currentMood") || "Neutral";
+    const tags = TAGS_BY_MOOD[mood] || ["#reflection"];
+
+    await addDoc(collection(db, "posts"), {
+        type: "photo",
+        imageUrl: url,
+        tags: tags,
+        userId: user.uid,
+        created: serverTimestamp()
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
+}
+
+// ---------------------------------------------------------------------
+// LOAD FEED — NEW UI
+// ---------------------------------------------------------------------
+export async function loadFeed() {
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
+
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
+
+    const snapshot = await getDocs(postsQuery);
+    container.innerHTML = "";
+
+    for (const docSnap of snapshot.docs) {
+        const post = docSnap.data();
+
+        // Load user info
+        const userDoc = await getDoc(doc(db, "users", post.userId));
+        const user = userDoc.data();
+
+        const postEl = document.createElement("div");
+        postEl.className = "post-card";
+
+        // Create tags HTML
+        const tagsHtml = (post.tags || [])
+            .map(t => `<span class="tag">${t}</span>`)
+            .join("");
+
+        // Optional content blocks
+        const photoBlock = post.type === "photo" ?
+            `<img src="${post.imageUrl}" class="post-photo"/>` : ``;
+
+        const textBlock = post.content ?
+            `<div class="post-text">${post.content}</div>` : ``;
+
+        postEl.innerHTML = `
+            <div class="post-header">
+                <img src="${user.avatarUrl || 'https://via.placeholder.com/40'}" class="avatar-sm"/>
+                <div class="username">@${user.displayName}</div>
+                <div class="menu-dots">•••</div>
+            </div>
+
+            ${photoBlock}
+
+            <div class="post-tags">
+                ${tagsHtml}
+            </div>
+
+            ${textBlock}
+
+            <div class="post-actions">
+                <span class="icon">♡</span>
+                <span class="icon">🔖</span>
+            </div>
+        `;
+
+        container.appendChild(postEl);
+    }
+}
 
 // ---------------------------------------------------------------------
 // THREAD VIEW (single post + replies)
