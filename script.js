@@ -44,7 +44,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+getAnalytics(app);
 
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -54,8 +54,8 @@ const storage = getStorage(app);
 // AUTH FUNCTIONS
 // ---------------------------------------------------------------------
 export async function signUpUser() {
-    const email = document.getElementById("emailInput").value;
-    const pass = document.getElementById("passwordInput").value;
+    const email = document.getElementById("emailInput")?.value;
+    const pass = document.getElementById("passwordInput")?.value;
 
     if (!email || !pass) {
         alert("Please enter an email and password.");
@@ -69,18 +69,15 @@ export async function signUpUser() {
         await setDoc(doc(db, "users", userCred.user.uid), {
             displayName: email.split("@")[0],
             email: email,
-            avatarUrl: "",
+            avatarUrl: ""
         });
 
-        // ✅ go to mood.html after successful signup
+        // Go to mood selection after successful signup
         window.location.href = "mood.html";
     } catch (err) {
         alert(err.message);
     }
 }
-
-// ✅ expose to global scope so HTML onclick can see it
-window.signUpUser = signUpUser;
 
 export async function loginUser() {
     const email = document.getElementById("loginEmail")?.value;
@@ -119,27 +116,29 @@ export function signOutUser() {
 // PROFILE LOADING / UPDATING
 // ---------------------------------------------------------------------
 export function loadProfile() {
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, async user => {
         if (!user) {
             // If no user, send them to signup
             window.location.href = "signup.html";
             return;
         }
 
-        const profileNameEl   = document.getElementById("displayName");
-        const profileEmailEl  = document.getElementById("emailField");
-        const avatarImgEl     = document.getElementById("avatarImg");
-        const avatarInputEl   = document.getElementById("avatarInput");
+        const profileNameEl  = document.getElementById("displayName");
+        const profileEmailEl = document.getElementById("emailField");
+        const avatarImgEl    = document.getElementById("avatarImg");
+        const avatarInputEl  = document.getElementById("avatarInput");
 
-        // If the profile page isn't actually loaded, just bail
+        // If this isn't the profile page, bail quietly
         if (!profileNameEl || !profileEmailEl || !avatarImgEl) return;
 
         const userDoc = await getDoc(doc(db, "users", user.uid));
-        const data = userDoc.exists() ? userDoc.data() : {
-            displayName: user.displayName || user.email || "Anonymous",
-            email: user.email,
-            avatarUrl: ""
-        };
+        const data = userDoc.exists()
+            ? userDoc.data()
+            : {
+                  displayName: user.displayName || user.email || "Anonymous",
+                  email: user.email,
+                  avatarUrl: ""
+              };
 
         profileNameEl.textContent  = data.displayName || "Anonymous";
         profileEmailEl.textContent = data.email || user.email || "";
@@ -226,10 +225,16 @@ export async function createTextPost() {
     }
 
     const text = input.value.trim();
-    if (!text) return alert("Write something first.");
+    if (!text) {
+        alert("Write something first.");
+        return;
+    }
 
     const user = auth.currentUser;
-    if (!user) return alert("You must be logged in.");
+    if (!user) {
+        alert("You must be logged in.");
+        return;
+    }
 
     const mood = localStorage.getItem("currentMood") || "Neutral";
 
@@ -247,11 +252,17 @@ export async function createTextPost() {
 
 export async function createPhotoPost() {
     const input = document.getElementById("photoPostInput");
-    if (!input || !input.files.length) return alert("Upload a photo first.");
+    if (!input || !input.files.length) {
+        alert("Upload a photo first.");
+        return;
+    }
 
     const file = input.files[0];
     const user = auth.currentUser;
-    if (!user) return alert("You must be logged in.");
+    if (!user) {
+        alert("You must be logged in.");
+        return;
+    }
 
     const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
     await uploadBytes(storageRef, file);
@@ -264,7 +275,7 @@ export async function createPhotoPost() {
         imageUrl: url,
         userId: user.uid,
         mood,
-        created: serverTimestamp(),
+        created: serverTimestamp()
     });
 
     input.value = "";
@@ -400,11 +411,11 @@ document.addEventListener("DOMContentLoaded", loadFeed);
 // ---------------------------------------------------------------------
 async function setupCommentsForPost(postId, articleEl) {
     const commentsContainer = articleEl.querySelector(".comments");
-    const commentsList = articleEl.querySelector(".comments-list");
-    const summaryEl = articleEl.querySelector(".comment-summary");
-    const toggleBtn = articleEl.querySelector(".comment-toggle-btn");
-    const inputEl = articleEl.querySelector(".add-comment-input");
-    const sendBtn = articleEl.querySelector(".add-comment-btn");
+    const commentsList      = articleEl.querySelector(".comments-list");
+    const summaryEl         = articleEl.querySelector(".comment-summary");
+    const toggleBtn         = articleEl.querySelector(".comment-toggle-btn");
+    const inputEl           = articleEl.querySelector(".add-comment-input");
+    const sendBtn           = articleEl.querySelector(".add-comment-btn");
 
     if (
         !commentsContainer ||
@@ -421,13 +432,13 @@ async function setupCommentsForPost(postId, articleEl) {
         commentsList.innerHTML = "";
 
         try {
-            const commentsCol = collection(db, "posts", postId, "comments");
+            const commentsCol   = collection(db, "posts", postId, "comments");
             const commentsQuery = query(commentsCol, orderBy("created", "asc"));
-            const snap = await getDocs(commentsQuery);
+            const snap          = await getDocs(commentsQuery);
 
             let count = 0;
             snap.forEach(docSnap => {
-                const c = docSnap.data();
+                const c    = docSnap.data();
                 const item = document.createElement("div");
                 item.className = "comment-item";
 
@@ -545,7 +556,7 @@ function getThreadIdFromUrl() {
 }
 
 export async function loadThread() {
-    const mainPost = document.getElementById("mainPost");
+    const mainPost   = document.getElementById("mainPost");
     const repliesList = document.getElementById("repliesList");
     if (!mainPost || !repliesList) return;
 
@@ -557,7 +568,7 @@ export async function loadThread() {
     }
 
     try {
-        const postRef = doc(db, "posts", threadId);
+        const postRef  = doc(db, "posts", threadId);
         const postSnap = await getDoc(postRef);
 
         if (!postSnap.exists()) {
@@ -581,7 +592,7 @@ export async function loadThread() {
         }
 
         const repliesRef = collection(db, "posts", threadId, "replies");
-        const repliesQ = query(repliesRef, orderBy("created", "asc"));
+        const repliesQ   = query(repliesRef, orderBy("created", "asc"));
         const repliesSnap = await getDocs(repliesQ);
 
         repliesList.innerHTML = "";
@@ -597,7 +608,7 @@ export async function loadThread() {
 
         repliesSnap.forEach(docSnap => {
             const reply = docSnap.data();
-            const div = document.createElement("div");
+            const div   = document.createElement("div");
             div.className = "reply";
 
             const userName = reply.userName || "Someone";
@@ -652,14 +663,14 @@ export async function createReply() {
         alert("Couldn't send your reply. Please try again.");
     }
 }
+
 // ---------------------------------------------------------------------
 // AUTH BUTTON WIRING (index.html, signup.html)
 // ---------------------------------------------------------------------
-
 function wireAuthButtons() {
     const loginBtn = document.getElementById("loginBtn");
     if (loginBtn) {
-        loginBtn.addEventListener("click", (event) => {
+        loginBtn.addEventListener("click", event => {
             event.preventDefault();
             loginUser();
         });
@@ -667,7 +678,7 @@ function wireAuthButtons() {
 
     const signupBtn = document.getElementById("signupBtn");
     if (signupBtn) {
-        signupBtn.addEventListener("click", (event) => {
+        signupBtn.addEventListener("click", event => {
             event.preventDefault();
             signUpUser();
         });
@@ -676,6 +687,7 @@ function wireAuthButtons() {
 
 // Run after DOM is ready, on any page that includes script.js
 document.addEventListener("DOMContentLoaded", wireAuthButtons);
+
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
@@ -698,3 +710,4 @@ window.createReply       = createReply;
 
 window.loadPreferences   = loadPreferences;
 window.toggleDarkMode    = toggleDarkMode;
+window.applySavedTheme   = applySavedTheme;
