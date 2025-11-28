@@ -309,136 +309,87 @@ export async function createPhotoPost() {
 }
 
 // ---------------------------------------------------------------------
-// LOAD FEED (cards + avatar + name + comment button)
+// LOAD FEED
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  const emptyState = document.getElementById("emptyState");
-  if (!container) return;
+    const container = document.getElementById("feedContainer");
+    if (!container) return; // Not on feed page
 
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
+    // Show mood in header (if element exists)
+    const mood = localStorage.getItem("currentMood") || "Neutral";
+    const moodLabel = document.getElementById("currentMoodLabel");
+    if (moodLabel) {
+        moodLabel.textContent = `Mood: ${mood}`;
+    }
 
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
+    container.innerHTML = `<div class="empty-state">Loading your corner…</div>`;
 
-  if (snapshot.empty) {
-    if (emptyState) emptyState.style.display = "block";
-    return;
-  } else if (emptyState) {
-    emptyState.style.display = "none";
-  }
+    try {
+        const postsQuery = query(
+            collection(db, "posts"),
+            orderBy("created", "desc")
+        );
 
-  for (const docSnap of snapshot.docs) {
-    const post = docSnap.data();
-    const postId = docSnap.id;
+        const snapshot = await getDocs(postsQuery);
+        container.innerHTML = "";
 
-    // Get author profile
-    let displayName = "Someone";
-    let avatarUrl = "https://via.placeholder.com/80?text=🙂";
-
-    if (post.userId) {
-      try {
-        const userDoc = await getDoc(doc(db, "users", post.userId));
-        if (userDoc.exists()) {
-          const u = userDoc.data();
-          displayName = u.displayName || displayName;
-          avatarUrl = u.avatarUrl || avatarUrl;
+        if (snapshot.empty) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    Nothing here yet.<br/>
+                    Try sharing a short thought or a photo.
+                </div>
+            `;
+            return;
         }
-      } catch (e) {
-        console.warn("Error loading user profile", e);
-      }
+
+        snapshot.forEach(docSnap => {
+            const post = docSnap.data();
+            const card = document.createElement("div");
+            card.className = "post-card";
+
+            let mainContent = "";
+            if (post.type === "photo" && post.imageUrl) {
+                mainContent += `<img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />`;
+            }
+            if (post.type === "text" && post.content) {
+                mainContent += `<div class="post-text">${post.content}</div>`;
+            }
+
+            const tagLabel = post.type === "photo" ? "Photography" : "Reflection";
+
+            // Simple timestamp formatting (if created exists)
+            let timeLabel = "";
+            if (post.created && post.created.toDate) {
+                const d = post.created.toDate();
+                timeLabel = d.toLocaleString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            }
+
+            card.innerHTML = `
+                ${mainContent}
+                <div class="post-meta">
+                    <span class="tag">${tagLabel}</span>
+                    <span class="timestamp">${timeLabel}</span>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = `
+            <div class="empty-state">
+                Hmm, something went wrong loading the feed.<br/>
+                Try refreshing the page.
+            </div>
+        `;
     }
-
-    // Card root
-    const card = document.createElement("div");
-    card.className = "post-card";
-
-    // Header
-    const header = document.createElement("div");
-    header.className = "post-header";
-
-    const avatar = document.createElement("img");
-    avatar.className = "post-avatar";
-    avatar.src = avatarUrl;
-    avatar.alt = displayName;
-
-    const userBlock = document.createElement("div");
-    userBlock.className = "post-user-block";
-
-    const nameEl = document.createElement("div");
-    nameEl.className = "post-name";
-    nameEl.textContent = displayName;
-
-    const metaEl = document.createElement("div");
-    metaEl.className = "post-meta";
-    metaEl.textContent = "Shared a moment";
-
-    userBlock.appendChild(nameEl);
-    userBlock.appendChild(metaEl);
-
-    header.appendChild(avatar);
-    header.appendChild(userBlock);
-    card.appendChild(header);
-
-    // Body: text or photo
-    if (post.type === "text" && post.content) {
-      const bodyText = document.createElement("div");
-      bodyText.className = "post-body-text";
-      bodyText.textContent = post.content;
-      card.appendChild(bodyText);
-
-      const tag = document.createElement("div");
-      tag.className = "post-tag";
-      tag.textContent = "Reflection";
-      card.appendChild(tag);
-    } else if (post.type === "photo" && post.imageUrl) {
-      const img = document.createElement("img");
-      img.className = "post-photo";
-      img.src = post.imageUrl;
-      img.alt = "Shared photo";
-      card.appendChild(img);
-
-      const tag = document.createElement("div");
-      tag.className = "post-tag";
-      tag.textContent = "Photography";
-      card.appendChild(tag);
-    }
-
-    // Comment row (goes to thread page)
-    const commentRow = document.createElement("div");
-    commentRow.className = "comment-row";
-
-    const input = document.createElement("input");
-    input.className = "comment-input";
-    input.type = "text";
-    input.placeholder = "Write a kind reply…";
-
-    const btn = document.createElement("button");
-    btn.className = "comment-btn";
-    btn.textContent = "Send";
-
-    btn.addEventListener("click", () => {
-      const text = input.value.trim();
-      // We just navigate to thread.html; thread page handles the actual conversation
-      const url = new URL("thread.html", window.location.href);
-      url.searchParams.set("postId", postId);
-      if (post.userId) url.searchParams.set("authorId", post.userId);
-      if (text) url.searchParams.set("draft", text); // optional: pass draft text
-      window.location.href = url.toString();
-    });
-
-    commentRow.appendChild(input);
-    commentRow.appendChild(btn);
-    card.appendChild(commentRow);
-
-    container.appendChild(card);
-  }
 }
-
-
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
 //  - body onload="loadThread()"
