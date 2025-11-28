@@ -652,7 +652,30 @@ export async function createReply() {
         alert("Couldn't send your reply. Please try again.");
     }
 }
+// ---------------------------------------------------------------------
+// AUTH BUTTON WIRING (index.html, signup.html)
+// ---------------------------------------------------------------------
 
+function wireAuthButtons() {
+    const loginBtn = document.getElementById("loginBtn");
+    if (loginBtn) {
+        loginBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            loginUser();
+        });
+    }
+
+    const signupBtn = document.getElementById("signupBtn");
+    if (signupBtn) {
+        signupBtn.addEventListener("click", (event) => {
+            event.preventDefault();
+            signUpUser();
+        });
+    }
+}
+
+// Run after DOM is ready, on any page that includes script.js
+document.addEventListener("DOMContentLoaded", wireAuthButtons);
 // ---------------------------------------------------------------------
 // Expose functions on window for inline HTML handlers
 // ---------------------------------------------------------------------
