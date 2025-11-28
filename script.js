@@ -39,7 +39,7 @@ import {
 // 🔴 IMPORTANT: Replace the values below with the config from your Firebase console
 // (Project settings → General → Your apps → Web app → Firebase SDK snippet v9+)
 const firebaseConfig = {
-  apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
+ apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
   authDomain: "calm-corner-e92e0.firebaseapp.com",
   projectId: "calm-corner-e92e0",
   storageBucket: "calm-corner-e92e0.firebasestorage.app",
