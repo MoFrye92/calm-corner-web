@@ -1,296 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Your Feed – A Calm Corner</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8" />
+  <title>Your Feed – A Calm Corner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script type="module" src="script.js"></script>
 
-    <!-- Firebase + app logic -->
-    <script type="module" src="script.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #f5f6f8;
+      color: #1d2b3a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding-bottom: 90px;
+    }
 
-    <style>
-        :root {
-            --bg: #f5f6f8;
-            --card-bg: #ffffff;
-            --text-main: #1d2b3a;
-            --text-sub: #4c5c6b;
-            --accent: #1d2b3a;
-            --border-soft: #d9e0e6;
-            --shadow-soft: 0 4px 14px rgba(0,0,0,0.06);
-        }
+    .header {
+      background: white;
+      padding: 24px 20px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
 
-        body {
-            margin: 0;
-            background: radial-gradient(circle at top, #f0f4ff 0, #f5f6f8 40%, #f5f6f8 100%);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            padding-bottom: 90px; /* room for bottom nav */
-        }
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
 
-        /* Header */
-        .header {
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(10px);
-            padding: 18px 20px 12px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
+    .header-sub {
+      font-size: 14px;
+      color: #4c5c6b;
+      margin-top: 4px;
+    }
 
-        .header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
+    .container {
+      max-width: 460px;
+      margin: 10px auto 0;
+      padding: 0 16px 20px;
+    }
 
-        .header-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
+    .toolbar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
 
-        .header-sub {
-            font-size: 13px;
-            color: var(--text-sub);
-            margin-top: 4px;
-        }
+    .pill-btn {
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #d4dce3;
+      background: #fff;
+      text-decoration: none;
+      color: #1d2b3a;
+    }
 
-        .mood-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 12px;
-            background: #e8f1ff;
-            color: var(--text-main);
-            border: 1px solid #d0ddff;
-            white-space: nowrap;
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+    .pill-btn:hover {
+      background: #eef1f4;
+    }
 
-        .mood-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4f8cff;
-        }
+    #feedContainer {
+      margin-top: 8px;
+    }
 
-        /* Main feed layout */
-        .container {
-            max-width: 420px;
-            margin: 10px auto 0;
-            padding: 0 16px 20px;
-        }
+    .post {
+      background: white;
+      padding: 14px 16px 10px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      margin-bottom: 18px;
+    }
 
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
 
-        .toolbar-label {
-            font-size: 13px;
-            color: var(--text-sub);
-        }
+    .post-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #dfe6eb;
+    }
 
-        .pill-btn {
-            font-size: 13px;
-            padding: 8px 16px;
-            border-radius: 999px;
-            border: 1px solid #d4dce3;
-            background: #ffffff;
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 500;
-        }
+    .post-user {
+      font-size: 14px;
+      font-weight: 600;
+    }
 
-        .pill-btn:hover {
-            background: #f0f3f6;
-        }
+    .post-text {
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 10px 0;
+    }
 
-        /* Posts */
-        #feedContainer {
-            margin-top: 4px;
-        }
+    .post-photo {
+      width: 100%;
+      border-radius: 10px;
+      margin: 10px 0;
+      display: block;
+    }
 
-        .post {
-            background: var(--card-bg);
-            padding: 16px 16px 12px;
-            border-radius: 16px;
-            box-shadow: var(--shadow-soft);
-            margin-bottom: 16px;
-            border: 1px solid rgba(255,255,255,0.7);
-        }
+    .post-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e5e8ec;
+      padding-top: 8px;
+      font-size: 13px;
+      color: #4c5c6b;
+    }
 
-        .postText {
-            font-size: 15px;
-            line-height: 1.6;
-            margin-bottom: 8px;
-            white-space: pre-wrap;
-        }
+    .like-btn {
+      background: none;
+      border: none;
+      color: #1d2b3a;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-        .postPhoto,
-        .post-photo {
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            display: block;
-        }
+    .like-btn:hover {
+      color: #0066cc;
+    }
 
-        .tag {
-            display: inline-block;
-            margin-top: 4px;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            background: #e8ecf0;
-            color: var(--text-main);
-        }
+    .comment-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
 
-        .post-meta {
-            margin-top: 6px;
-            font-size: 11px;
-            color: var(--text-sub);
-        }
+    .comment-bar input {
+      flex: 1;
+      border: 1px solid #d5dce3;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      background: #f8fafc;
+    }
 
-        .empty-state {
-            font-size: 14px;
-            color: var(--text-sub);
-            text-align: center;
-            margin-top: 40px;
-        }
+    .comment-bar button {
+      border: none;
+      background: #1d2b3a;
+      color: white;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+    }
 
-        /* Optional richer post layout hooks (future-ready) */
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
+    .nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #d9e0e6;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      font-size: 13px;
+    }
 
-        .post-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: #cbd8e3;
-        }
+    .nav a {
+      color: #4c5c6b;
+      text-decoration: none;
+    }
 
-        .post-user {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .post-name {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .post-caption {
-            font-size: 15px;
-            line-height: 1.5;
-            margin: 8px 0 10px;
-        }
-
-        .post-footer {
-            border-top: 1px solid #e2e6ea;
-            padding-top: 8px;
-            margin-top: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .comments-label {
-            font-size: 12px;
-            color: var(--text-sub);
-        }
-
-        .comment-input {
-            flex: 1;
-            padding: 7px 9px;
-            border-radius: 10px;
-            border: 1px solid #d5dce3;
-            font-size: 13px;
-            background: #f8fafc;
-        }
-
-        .comments-button {
-            border: none;
-            background: var(--accent);
-            color: white;
-            font-size: 13px;
-            padding: 7px 12px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        /* Bottom nav */
-        .nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #ffffff;
-            border-top: 1px solid var(--border-soft);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0 12px;
-            font-size: 13px;
-        }
-
-        .nav a {
-            color: var(--text-sub);
-            text-decoration: none;
-        }
-
-        .nav a.active {
-            font-weight: 600;
-            color: var(--accent);
-        }
-    </style>
+    .nav a.active {
+      font-weight: 600;
+      color: #1d2b3a;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="header">
-        <div class="header-row">
-            <div>
-                <div class="header-title">Your Feed</div>
-                <div class="header-sub">A quiet place to share and reflect</div>
-            </div>
-            <!-- This text is updated by loadMood() via #focusText -->
-            <div class="mood-pill">
-                <span class="mood-dot"></span>
-                <span id="focusText">Content for: Neutral</span>
-            </div>
-        </div>
+  <div class="header">
+    <div class="header-title">Your Feed</div>
+    <div class="header-sub">A quiet place to share and reflect</div>
+  </div>
+
+  <div class="container">
+    <div class="toolbar">
+      <a href="post.html" class="pill-btn">+ New post</a>
     </div>
 
-    <div class="container">
-        <div class="toolbar">
-            <div class="toolbar-label">Latest reflections</div>
-            <a href="post.html" class="pill-btn">+ New post</a>
+    <div id="feedContainer">
+      <div class="post">
+        <div class="post-header">
+          <img src="https://via.placeholder.com/36" alt="avatar" class="post-avatar" />
+          <div class="post-user">monique.l.frye</div>
+        </div>
+        <img src="https://via.placeholder.com/400x250" alt="post image" class="post-photo" />
+        <div class="post-text">New Test Post</div>
+        <div class="post-footer">
+          <button class="like-btn">❤️ Like</button>
+          <a href="thread.html?id=example123" class="pill-btn" style="padding: 6px 12px;">View Thread</a>
         </div>
 
-        <!-- Posts will be injected here by loadFeed() in script.js -->
-        <div id="feedContainer">
-            <div class="empty-state">Loading your calm corner…</div>
+        <div class="comment-bar">
+          <input type="text" placeholder="Add a gentle thought..." />
+          <button>Send</button>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Bottom navigation -->
-    <div class="nav">
-        <a href="feed.html" class="active">Feed</a>
-        <a href="mood.html">Mood</a>
-        <a href="post.html">Create</a>
-        <a href="topics.html">Topics</a>
-        <a href="profile.html">Profile</a>
-    </div>
+  <div class="nav">
+    <a href="feed.html" class="active">Feed</a>
+    <a href="mood.html">Mood</a>
+    <a href="post.html">Create</a>
+    <a href="topics.html">Topics</a>
+    <a href="profile.html">Profile</a>
+  </div>
 </body>
 </html>
