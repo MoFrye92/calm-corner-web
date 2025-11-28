@@ -39,13 +39,13 @@ import {
 // 🔴 IMPORTANT: Replace the values below with the config from your Firebase console
 // (Project settings → General → Your apps → Web app → Firebase SDK snippet v9+)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
-  measurementId: "YOUR_MEASUREMENT_ID"
+  apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
+  authDomain: "calm-corner-e92e0.firebaseapp.com",
+  projectId: "calm-corner-e92e0",
+  storageBucket: "calm-corner-e92e0.firebasestorage.app",
+  messagingSenderId: "470025194370",
+  appId: "1:470025194370:web:90830dd0951427b39a1d9b",
+  measurementId: "G-HBC6NHQF19"
 };
 
 // Init Firebase
