@@ -1,112 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Your Feed – A Calm Corner</title>
+    <meta charset="UTF-8">
+    <title>Your Feed – A Calm Corner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Load Firebase + app logic -->
-  <script type="module" src="script.js"></script>
+    <!-- Load Firebase + app logic -->
+    <script type="module" src="script.js"></script>
 
-  <style>
-   body {
-    margin: 0;
-    background: #f4f6f8;
-    color: #1d2b3a;
-    font-family: system-ui, sans-serif;
-}
+    <style>
+        body {
+            font-family: system-ui, Arial, sans-serif;
+            background: #f5f6f8;
+            margin: 0;
+            padding: 0 0 90px; /* space for bottom nav */
+            color: #1d2b3a;
+        }
 
-.feed-list {
-    max-width: 500px;
-    margin: 20px auto;
-    padding: 0 14px;
-}
+        /* Header */
+        .header {
+            background: white;
+            text-align: center;
+            padding: 24px 14px 16px;
+            font-size: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
 
-.post-card {
-    background: white;
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 22px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-}
+        .sub {
+            font-size: 14px;
+            color: #4c5c6b;
+            margin-top: 4px;
+        }
 
-.post-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        /* Feed container */
+        .feed-wrapper {
+            max-width: 420px;
+            margin: 16px auto 0;
+            padding: 0 16px 16px;
+        }
 
-.avatar-sm {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    object-fit: cover;
-}
+        .post {
+            background: white;
+            padding: 16px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
 
-.username {
-    font-weight: 600;
-    font-size: 14px;
-}
+        .postText {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
 
-.menu-dots {
-    margin-left: auto;
-    font-size: 20px;
-    letter-spacing: 2px;
-    cursor: pointer;
-}
+        .postPhoto {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+            margin-bottom: 8px;
+        }
 
-.post-photo {
-    width: 100%;
-    border-radius: 10px;
-    margin: 14px 0;
-}
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e8ecf0;
+            color: #1d2b3a;
+        }
 
-.post-tags {
-    margin: 6px 0 10px;
-}
+        /* Bottom nav */
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #d9e0e6;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            font-size: 13px;
+            z-index: 20;
+        }
 
-.tag {
-    display: inline-block;
-    background: #eef2f5;
-    padding: 4px 10px;
-    border-radius: 10px;
-    font-size: 12px;
-    margin-right: 6px;
-}
+        .nav a {
+            color: #4c5c6b;
+            text-decoration: none;
+        }
 
-.post-text {
-    line-height: 1.5;
-    margin-bottom: 12px;
-    font-size: 15px;
-}
-
-.post-actions {
-    display: flex;
-    gap: 14px;
-    font-size: 20px;
-    padding-top: 6px;
-    color: #4c5c6b;
-}
-
-.icon {
-    cursor: pointer;
-}
-  </style>
+        .nav a.active {
+            font-weight: 600;
+            color: #1d2b3a;
+        }
+    </style>
 </head>
 
 <body onload="loadFeed()">
-
     <div class="header">
-        <div class="title">Your Feed</div>
-        <div class="sub">A calm place to read and share</div>
+        Your corner
+        <div class="sub">Gentle updates from your day</div>
     </div>
 
-    <div id="feedContainer" class="feed-list">
-        <!-- Posts load here -->
+    <div class="feed-wrapper">
+        <div id="feedContainer">
+            Loading your posts…
+        </div>
     </div>
 
+    <div class="nav">
+        <a href="feed.html" class="active">Feed</a>
+        <a href="topics.html">Topics</a>
+        <a href="post.html">Post</a>
+        <a href="message.html">Messages</a>
+        <a href="profile.html">Profile</a>
+    </div>
 </body>
-</body>
-
 </html>
