@@ -198,84 +198,156 @@ document.addEventListener("DOMContentLoaded", loadMood);
 // ---------------------------------------------------------------------
 // CREATE POSTS
 // ---------------------------------------------------------------------
-async function createTextPost() {
-  const input = document.getElementById("textPostInput");
-  if (!input) return;
+export async function createTextPost() {
+    const input = document.getElementById("textPostInput");
+    const text = input.value.trim();
 
-  const text = input.value.trim();
-  if (!text) return alert("Write something first.");
+    if (!text) return alert("Write something first.");
 
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
 
-  await addDoc(collection(db, "posts"), {
-    type: "text",
-    content: text,
-    userId: user.uid,
-    created: serverTimestamp()
-  });
+    // get user profile from Firestore
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const profile = userDoc.exists() ? userDoc.data() : {};
 
-  input.value = "";
-  window.location.href = "feed.html";
+    const displayName =
+        profile.displayName ||
+        user.displayName ||
+        (user.email ? user.email.split("@")[0] : "Anonymous");
+
+    const avatarUrl =
+        profile.avatarUrl ||
+        user.photoURL ||
+        "";
+
+    await addDoc(collection(db, "posts"), {
+        type: "text",
+        content: text,
+        userId: user.uid,
+        userDisplayName: displayName,
+        userAvatarUrl: avatarUrl,
+        created: serverTimestamp()
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
-async function createPhotoPost() {
-  const input = document.getElementById("photoPostInput");
-  if (!input || !input.files.length) return alert("Upload a photo first.");
+export async function createPhotoPost() {
+    const input = document.getElementById("photoPostInput");
+    if (!input.files.length) return alert("Upload a photo first.");
 
-  const file = input.files[0];
-  const user = auth.currentUser;
-  if (!user) return alert("You must be logged in.");
+    const file = input.files[0];
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in.");
 
-  const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+    // get user profile from Firestore
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const profile = userDoc.exists() ? userDoc.data() : {};
 
-  await addDoc(collection(db, "posts"), {
-    type: "photo",
-    imageUrl: url,
-    userId: user.uid,
-    created: serverTimestamp()
-  });
+    const displayName =
+        profile.displayName ||
+        user.displayName ||
+        (user.email ? user.email.split("@")[0] : "Anonymous");
 
-  input.value = "";
-  window.location.href = "feed.html";
+    const avatarUrl =
+        profile.avatarUrl ||
+        user.photoURL ||
+        "";
+
+    // upload image
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+
+    await addDoc(collection(db, "posts"), {
+        type: "photo",
+        imageUrl: url,
+        userId: user.uid,
+        userDisplayName: displayName,
+        userAvatarUrl: avatarUrl,
+        created: serverTimestamp(),
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
 }
 
 // ---------------------------------------------------------------------
 // LOAD FEED
 // ---------------------------------------------------------------------
-async function loadFeed() {
-  const container = document.getElementById("feedContainer");
-  if (!container) return; // Not on the feed page
+export async function loadFeed() {
+    const container = document.getElementById("feedContainer");
+    if (!container) return;
 
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
 
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
+    const snapshot = await getDocs(postsQuery);
+    container.innerHTML = "";
 
-  snapshot.forEach((docData) => {
-    const post = docData.data();
-    const div = document.createElement("div");
-    div.className = "post";
+    snapshot.forEach(docSnap => {
+        const post = docSnap.data();
 
-    if (post.type === "text") {
-      div.innerHTML = `
-        <div class="postText">${post.content}</div>
-        <div class="tag">Reflection</div>
-      `;
-    } else if (post.type === "photo") {
-      div.innerHTML = `
-        <img src="${post.imageUrl}" class="postPhoto" />
-        <div class="tag">Photography</div>
-      `;
-    }
+        const div = document.createElement("div");
+        div.className = "post-card";
 
-    container.appendChild(div);
-  });
+        const name = post.userDisplayName || "Anonymous";
+        const avatar =
+            post.userAvatarUrl ||
+            "https://via.placeholder.com/40?text=U";
+
+        let bodyHtml = "";
+
+        if (post.type === "text") {
+            bodyHtml = `
+                <div class="post-caption">
+                    ${post.content}
+                </div>
+            `;
+        } else if (post.type === "photo") {
+            bodyHtml = `
+                <div class="post-photo-wrapper">
+                    <img src="${post.imageUrl}" class="post-photo" alt="Post image" />
+                </div>
+            `;
+        }
+
+        div.innerHTML = `
+            <div class="post-header">
+                <img class="post-avatar" src="${avatar}" alt="${name}" />
+                <div class="post-user">
+                    <div class="post-name">${name}</div>
+                </div>
+            </div>
+
+            ${bodyHtml}
+
+            <div class="post-footer">
+                <!-- simple “spot for comments” -->
+                <div class="comments-preview">
+                    <span class="comments-label">Comments</span>
+                    <input
+                        class="comment-input"
+                        type="text"
+                        placeholder="Add a gentle thought..."
+                        disabled
+                    />
+                </div>
+                <button
+                    class="comments-button"
+                    onclick="window.location.href='thread.html?id=${docSnap.id}'"
+                >
+                    View full thread
+                </button>
+            </div>
+        `;
+
+        container.appendChild(div);
+    });
 }
 
 // Run on every page, but will only do work if #feedContainer exists
