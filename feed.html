@@ -70,7 +70,9 @@
             margin-top: 4px;
         }
 
-        .post {
+        /* Make simple posts and richer post-cards share the same base card style */
+        .post,
+        .post-card {
             background: white;
             padding: 16px;
             border-radius: 16px;
@@ -107,91 +109,85 @@
             text-align: center;
             margin-top: 40px;
         }
-        .post-card {
-    background: white;
-    padding: 16px;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-    margin-bottom: 16px;
-}
 
-.post-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
+        /* Rich post layout (optional, for when you wire up avatars & comments) */
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
 
-.post-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: #cbd8e3;
-}
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #cbd8e3;
+        }
 
-.post-user {
-    display: flex;
-    flex-direction: column;
-}
+        .post-user {
+            display: flex;
+            flex-direction: column;
+        }
 
-.post-name {
-    font-size: 14px;
-    font-weight: 600;
-}
+        .post-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
 
-.post-caption {
-    font-size: 15px;
-    line-height: 1.5;
-    margin: 8px 0 10px;
-}
+        .post-caption {
+            font-size: 15px;
+            line-height: 1.5;
+            margin: 8px 0 10px;
+        }
 
-.post-photo-wrapper {
-    margin: 8px 0 10px;
-}
+        .post-photo-wrapper {
+            margin: 8px 0 10px;
+        }
 
-.post-photo {
-    width: 100%;
-    border-radius: 12px;
-    display: block;
-}
+        .post-photo {
+            width: 100%;
+            border-radius: 12px;
+            display: block;
+        }
 
-.post-footer {
-    border-top: 1px solid #e2e6ea;
-    padding-top: 10px;
-    margin-top: 6px;
-}
+        .post-footer {
+            border-top: 1px solid #e2e6ea;
+            padding-top: 10px;
+            margin-top: 6px;
+        }
 
-.comments-preview {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
+        .comments-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
 
-.comments-label {
-    font-size: 13px;
-    color: #4c5c6b;
-}
+        .comments-label {
+            font-size: 13px;
+            color: #4c5c6b;
+        }
 
-.comment-input {
-    flex: 1;
-    padding: 8px 10px;
-    border-radius: 10px;
-    border: 1px solid #d5dce3;
-    font-size: 13px;
-    background: #f8fafc;
-}
+        .comment-input {
+            flex: 1;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid #d5dce3;
+            font-size: 13px;
+            background: #f8fafc;
+        }
 
-.comments-button {
-    border: none;
-    background: #1d2b3a;
-    color: white;
-    font-size: 13px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-}
+        .comments-button {
+            border: none;
+            background: #1d2b3a;
+            color: white;
+            font-size: 13px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
 
         /* Bottom nav (same pattern as other pages) */
         .nav {
