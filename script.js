@@ -14,7 +14,7 @@ import {
   getDocs,
   serverTimestamp,
   query,
-  orderBy
+  orderBy,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -23,19 +23,16 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
-  updateProfile
+  updateProfile,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import {
   getStorage,
   ref,
   uploadBytes,
-  getDownloadURL
+  getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// ---------------------------
-// Your Firebase Config
-// ---------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyAfVOR--E6CgaLNopCql4QNviXdhVg4GAY",
   authDomain: "calm-corner-e92e0.firebaseapp.com",
@@ -43,11 +40,12 @@ const firebaseConfig = {
   storageBucket: "calm-corner-e92e0.firebasestorage.app",
   messagingSenderId: "470025194370",
   appId: "1:470025194370:web:90830dd0951427b39a1d9b",
-  measurementId: "G-HBC6NHQF19"
+  measurementId: "G-HBC6NHQF19",
 };
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+
 const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
@@ -55,144 +53,203 @@ const storage = getStorage(app);
 // ---------------------------------------------------------------------
 // AUTH FUNCTIONS
 // ---------------------------------------------------------------------
-async function signUpUser() {
-  const email = document.getElementById("emailInput").value;
-  const pass = document.getElementById("passwordInput").value;
+export async function signUpUser() {
+  const email = document.getElementById("emailInput")?.value;
+  const pass = document.getElementById("passwordInput")?.value;
+
+  if (!email || !pass) {
+    alert("Please enter an email and password.");
+    return;
+  }
 
   try {
     const userCred = await createUserWithEmailAndPassword(auth, email, pass);
 
+    // Create user profile in Firestore
     await setDoc(doc(db, "users", userCred.user.uid), {
       displayName: email.split("@")[0],
       email: email,
-      avatarUrl: ""
+      avatarUrl: "",
+      created: serverTimestamp(),
+    });
+
+    // Also update Firebase Auth profile displayName
+    await updateProfile(userCred.user, {
+      displayName: email.split("@")[0],
     });
 
     window.location.href = "mood.html";
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
 
-async function loginUser() {
-  const email = document.getElementById("loginEmail").value;
-  const pass = document.getElementById("loginPassword").value;
+export async function loginUser() {
+  const email = document.getElementById("loginEmail")?.value;
+  const pass = document.getElementById("loginPassword")?.value;
+
+  if (!email || !pass) {
+    alert("Please enter your email and password.");
+    return;
+  }
 
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     window.location.href = "feed.html";
   } catch (err) {
+    console.error(err);
     alert(err.message);
   }
 }
 
-function logoutUser() {
-  signOut(auth);
-  window.location.href = "index.html";
+export function logoutUser() {
+  signOut(auth)
+    .then(() => {
+      window.location.href = "index.html";
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Error signing out.");
+    });
 }
 
 // ---------------------------------------------------------------------
-// PROFILE PAGE
+// PROFILE LOADING / UPDATING
+// profile.html expects:
+//  - #displayName
+//  - #emailField
+//  - <img id="avatarImg">
+//  - <input type="file" id="avatarInput">
 // ---------------------------------------------------------------------
-function loadProfile() {
+export function loadProfile() {
+  // Only set up the listener if we're actually on the profile page
+  const hasProfileDom =
+    document.getElementById("displayName") ||
+    document.getElementById("emailField") ||
+    document.getElementById("avatarImg");
+
+  if (!hasProfileDom) return;
+
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      // If you prefer, redirect to signup.html instead.
       window.location.href = "index.html";
       return;
     }
 
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
 
-    if (!userSnap.exists()) {
-      await setDoc(userRef, {
-        displayName:
-          user.displayName ||
-          (user.email ? user.email.split("@")[0] : user.uid),
-        email: user.email,
-        avatarUrl: user.photoURL || ""
-      });
-    }
+      const data = snap.exists()
+        ? snap.data()
+        : {
+            displayName: user.displayName || "Friend",
+            email: user.email || "",
+            avatarUrl: "",
+          };
 
-    const data = (await getDoc(userRef)).data();
+      const nameEl = document.getElementById("displayName");
+      const emailEl = document.getElementById("emailField");
+      const avatarImg = document.getElementById("avatarImg");
+      const avatarInput = document.getElementById("avatarInput");
 
-    const nameEl = document.getElementById("displayName");
-    const emailEl = document.getElementById("emailField");
-    const avatarEl = document.getElementById("avatarImg");
-    const avatarInput = document.getElementById("avatarInput");
+      if (nameEl) nameEl.textContent = data.displayName || "Friend";
+      if (emailEl) emailEl.textContent = data.email || user.email || "";
+      if (avatarImg)
+        avatarImg.src =
+          data.avatarUrl || "https://via.placeholder.com/100?text=Avatar";
 
-    const effectiveName =
-      data.displayName ||
-      user.displayName ||
-      (user.email ? user.email.split("@")[0] : user.uid);
-
-    if (nameEl) nameEl.textContent = effectiveName;
-    if (emailEl) emailEl.textContent = data.email || "";
-    if (avatarEl) avatarEl.src = data.avatarUrl || "default.png";
-
-    if (avatarInput) {
-      avatarInput.onchange = () => {
-        if (avatarInput.files?.[0]) {
-          uploadAvatar(user.uid, avatarInput.files[0]);
-        }
-      };
+      if (avatarInput) {
+        avatarInput.onchange = () => {
+          if (avatarInput.files && avatarInput.files[0]) {
+            uploadAvatar(user.uid, avatarInput.files[0]);
+          }
+        };
+      }
+    } catch (err) {
+      console.error(err);
+      alert("There was a problem loading your profile.");
     }
   });
 }
 
-async function uploadAvatar(uid, file) {
-  const storageRef = ref(storage, `avatars/${uid}.jpg`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+export async function uploadAvatar(uid, file) {
+  try {
+    const storageRef = ref(storage, `avatars/${uid}.jpg`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  await setDoc(doc(db, "users", uid), { avatarUrl: url }, { merge: true });
+    await setDoc(
+      doc(db, "users", uid),
+      { avatarUrl: url, updated: serverTimestamp() },
+      { merge: true }
+    );
 
-  const avatarEl = document.getElementById("avatarImg");
-  if (avatarEl) avatarEl.src = url;
+    const avatarImg = document.getElementById("avatarImg");
+    if (avatarImg) avatarImg.src = url;
+  } catch (err) {
+    console.error(err);
+    alert("Error uploading avatar.");
+  }
 }
 
-async function updateDisplayName() {
+export async function updateDisplayName() {
   const newName = prompt("Enter your new name:");
   if (!newName) return;
 
   const user = auth.currentUser;
+  if (!user) {
+    alert("You must be logged in.");
+    return;
+  }
 
-  await setDoc(doc(db, "users", user.uid), { displayName: newName }, { merge: true });
-  await updateProfile(user, { displayName: newName });
+  try {
+    await setDoc(
+      doc(db, "users", user.uid),
+      { displayName: newName, updated: serverTimestamp() },
+      { merge: true }
+    );
 
-  const nameEl = document.getElementById("displayName");
-  if (nameEl) nameEl.textContent = newName;
+    await updateProfile(user, { displayName: newName });
+
+    const nameEl = document.getElementById("displayName");
+    if (nameEl) nameEl.textContent = newName;
+  } catch (err) {
+    console.error(err);
+    alert("Error updating name.");
+  }
 }
 
 // ---------------------------------------------------------------------
-// MOOD + TAGS
+// MOOD
+// mood.html buttons should call selectMood('Anxious'), etc.
+// focus-section shows text in #focusText
 // ---------------------------------------------------------------------
-function selectMood(mood) {
+export function selectMood(mood) {
   localStorage.setItem("currentMood", mood);
   window.location.href = "feed.html";
 }
 
-function loadMood() {
-  const mood = localStorage.getItem("currentMood") || "Neutral";
+export function loadMood() {
   const label = document.getElementById("focusText");
-  if (label) label.textContent = `Content for: ${mood}`;
+  if (!label) return; // not on the mood page
+
+  const mood = localStorage.getItem("currentMood") || "Neutral";
+  label.textContent = `Content for: ${mood}`;
 }
 
-document.addEventListener("DOMContentLoaded", loadMood);
-
-const TAGS_BY_MOOD = {
-  Calm: ["#calm", "#mindfulness"],
-  Inspired: ["#inspiration", "#motivation"],
-  Stressed: ["#stress", "#support"],
-  Happy: ["#joy", "#gratitude"],
-  Neutral: ["#reflection"]
-};
-
 // ---------------------------------------------------------------------
-// CREATE POSTS
+// CREATE POSTS (post.html)
+//  - textarea#textPostInput
+//  - input#photoPostInput[type=file]
+//  - buttons calling createTextPost() / createPhotoPost()
 // ---------------------------------------------------------------------
 export async function createTextPost() {
   const input = document.getElementById("textPostInput");
+  if (!input) return;
+
   const text = input.value.trim();
   if (!text) return alert("Write something first.");
 
@@ -200,189 +257,238 @@ export async function createTextPost() {
   if (!user) return alert("You must be logged in.");
 
   const mood = localStorage.getItem("currentMood") || "Neutral";
-  const tags = TAGS_BY_MOOD[mood];
 
-  await addDoc(collection(db, "posts"), {
-    type: "text",
-    content: text,
-    tags: tags,
-    userId: user.uid,
-    created: serverTimestamp()
-  });
+  try {
+    await addDoc(collection(db, "posts"), {
+      type: "text",
+      content: text,
+      mood,
+      userId: user.uid,
+      created: serverTimestamp(),
+    });
 
-  input.value = "";
-  window.location.href = "feed.html";
+    input.value = "";
+    window.location.href = "feed.html";
+  } catch (err) {
+    console.error(err);
+    alert("Error creating post.");
+  }
 }
 
 export async function createPhotoPost() {
   const input = document.getElementById("photoPostInput");
+  if (!input) return;
+
   if (!input.files.length) return alert("Upload a photo first.");
 
   const file = input.files[0];
   const user = auth.currentUser;
-
-  const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
+  if (!user) return alert("You must be logged in.");
 
   const mood = localStorage.getItem("currentMood") || "Neutral";
-  const tags = TAGS_BY_MOOD[mood];
 
-  await addDoc(collection(db, "posts"), {
-    type: "photo",
-    imageUrl: url,
-    tags: tags,
-    userId: user.uid,
-    created: serverTimestamp()
-  });
+  try {
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
 
-  input.value = "";
-  window.location.href = "feed.html";
+    await addDoc(collection(db, "posts"), {
+      type: "photo",
+      imageUrl: url,
+      mood,
+      userId: user.uid,
+      created: serverTimestamp(),
+    });
+
+    input.value = "";
+    window.location.href = "feed.html";
+  } catch (err) {
+    console.error(err);
+    alert("Error uploading photo.");
+  }
 }
 
 // ---------------------------------------------------------------------
-// FEED
+// LOAD FEED (feed.html)
+//  - container#feedContainer
+//  posts collection: type=text/photo, etc.
 // ---------------------------------------------------------------------
 export async function loadFeed() {
   const container = document.getElementById("feedContainer");
-  if (!container) return;
+  if (!container) return; // not on feed page
 
-  const postsQuery = query(
-    collection(db, "posts"),
-    orderBy("created", "desc")
-  );
+  try {
+    const postsQuery = query(
+      collection(db, "posts"),
+      orderBy("created", "desc")
+    );
+    const snapshot = await getDocs(postsQuery);
 
-  const snapshot = await getDocs(postsQuery);
-  container.innerHTML = "";
+    container.innerHTML = "";
 
-  for (const docSnap of snapshot.docs) {
-    const post = docSnap.data();
+    snapshot.forEach((docSnap) => {
+      const post = docSnap.data();
+      const id = docSnap.id;
 
-    const userDoc = await getDoc(doc(db, "users", post.userId));
-    const user = userDoc.data();
+      const div = document.createElement("div");
+      div.className = "post";
 
-    const postEl = document.createElement("div");
-    postEl.className = "post-card";
+      const moodLabel = post.mood ? `<div class="tag">${post.mood}</div>` : "";
 
-    const tagsHtml = (post.tags || [])
-      .map(t => `<span class="tag">${t}</span>`)
-      .join("");
+      if (post.type === "text") {
+        div.innerHTML = `
+          <div class="postText">${post.content || ""}</div>
+          ${moodLabel}
+        `;
+      } else if (post.type === "photo") {
+        div.innerHTML = `
+          <img src="${post.imageUrl}" class="postPhoto" alt="Shared photo"/>
+          ${moodLabel}
+        `;
+      } else {
+        div.innerHTML = `<div class="postText">${post.content || ""}</div>`;
+      }
 
-    const photoBlock =
-      post.type === "photo"
-        ? `<img src="${post.imageUrl}" class="post-photo" />`
-        : ``;
+      // Optional: clicking a post opens the thread view
+      div.onclick = () => {
+        window.location.href = `thread.html?id=${encodeURIComponent(id)}`;
+      };
 
-    const textBlock =
-      post.content
-        ? `<div class="post-text">${post.content}</div>`
-        : ``;
-
-    postEl.innerHTML = `
-        <div class="post-header">
-            <img src="${user.avatarUrl || 'default.png'}" class="avatar-sm" />
-            <div class="username">@${user.displayName}</div>
-            <div class="menu-dots">•••</div>
-        </div>
-
-        ${photoBlock}
-
-        <div class="post-tags">${tagsHtml}</div>
-
-        ${textBlock}
-
-        <div class="post-actions">
-            <span class="icon">♡</span>
-            <a class="icon" href="thread.html?id=${docSnap.id}">💬</a>
-        </div>
-    `;
-
-    container.appendChild(postEl);
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    container.innerHTML =
+      '<div class="postText">There was a problem loading the feed.</div>';
   }
 }
 
 // ---------------------------------------------------------------------
-// THREAD PAGE
+// THREAD VIEW (thread.html)
+//  - body onload="loadThread()"
+//  - #mainPost for the parent post
+//  - #repliesList for replies
+//  - textarea#replyInput, button onclick="createReply()"
+// replies stored at: posts/{postId}/replies
 // ---------------------------------------------------------------------
 export async function loadThread() {
-  const mainDiv = document.getElementById("mainPost");
-  const repliesDiv = document.getElementById("repliesList");
-  if (!mainDiv || !repliesDiv) return;
+  const mainPostEl = document.getElementById("mainPost");
+  const repliesList = document.getElementById("repliesList");
+  if (!mainPostEl || !repliesList) return; // not on thread page
 
   const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+  const postId = params.get("id");
 
-  const postSnap = await getDoc(doc(db, "posts", id));
-  if (!postSnap.exists()) {
-    mainDiv.textContent = "Not found.";
+  if (!postId) {
+    mainPostEl.textContent = "No post selected.";
     return;
   }
 
-  const post = postSnap.data();
+  try {
+    const postSnap = await getDoc(doc(db, "posts", postId));
+    if (!postSnap.exists()) {
+      mainPostEl.textContent = "That post was not found.";
+      return;
+    }
 
-  mainDiv.innerHTML = `
-      <div class="post-text">${post.content || ""}</div>
-      <div class="post-tags">
-        ${(post.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
-      </div>
-  `;
+    const post = postSnap.data();
 
-  const repliesQuery = query(
-    collection(db, "posts", id, "replies"),
-    orderBy("created", "asc")
-  );
+    if (post.type === "photo") {
+      mainPostEl.innerHTML = `
+        <img src="${post.imageUrl}" style="max-width:100%; border-radius:12px; margin-bottom:10px;" alt="Thread photo"/>
+        <div class="tag">${post.mood || "Photography"}</div>
+      `;
+    } else {
+      mainPostEl.innerHTML = `
+        <div>${post.content || ""}</div>
+        <div class="tag">${post.mood || "Reflection"}</div>
+      `;
+    }
 
-  const snap = await getDocs(repliesQuery);
-  repliesDiv.innerHTML = "";
+    // Load replies
+    const repliesCol = collection(db, "posts", postId, "replies");
+    const repliesSnap = await getDocs(
+      query(repliesCol, orderBy("created", "asc"))
+    );
 
-  snap.forEach(replyDoc => {
-    const r = replyDoc.data();
-    repliesDiv.innerHTML += `
-        <div class="reply">
-            <div class="reply-user">${r.authorName}</div>
-            <div>${r.text}</div>
-        </div>
-    `;
-  });
+    repliesList.innerHTML = "";
+    repliesSnap.forEach((replySnap) => {
+      const r = replySnap.data();
+      const div = document.createElement("div");
+      div.className = "reply";
+      div.innerHTML = `
+        <div class="reply-user">${r.authorName || "Someone"}</div>
+        <div>${r.text || ""}</div>
+      `;
+      repliesList.appendChild(div);
+    });
+  } catch (err) {
+    console.error(err);
+    mainPostEl.textContent = "There was a problem loading this thread.";
+  }
 }
 
 export async function createReply() {
   const input = document.getElementById("replyInput");
+  if (!input) return;
+
   const text = input.value.trim();
   if (!text) return;
 
-  const user = auth.currentUser;
-  if (!user) return alert("Log in.");
-
   const params = new URLSearchParams(window.location.search);
-  const id = params.get("id");
+  const postId = params.get("id");
+  if (!postId) {
+    alert("No thread to reply to.");
+    return;
+  }
 
-  const authorName =
-    user.displayName ||
-    (user.email ? user.email.split("@")[0] : user.uid);
+  const user = auth.currentUser;
+  const authorName = user?.displayName || "Guest";
 
-  await addDoc(collection(db, "posts", id, "replies"), {
-    text,
-    authorId: user.uid,
-    authorName,
-    created: serverTimestamp()
-  });
+  try {
+    await addDoc(collection(db, "posts", postId, "replies"), {
+      text,
+      authorName,
+      userId: user?.uid || null,
+      created: serverTimestamp(),
+    });
 
-  input.value = "";
-  loadThread();
+    input.value = "";
+    await loadThread();
+  } catch (err) {
+    console.error(err);
+    alert("Error sending reply.");
+  }
 }
 
 // ---------------------------------------------------------------------
-// EXPORT TO WINDOW
+// GLOBAL PAGE INITIALIZATION
+// ---------------------------------------------------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  // Safe: each function checks for its own DOM elements
+  loadMood();
+  loadFeed();
+  // Profile and thread are loaded via body onload in their HTML,
+  // but you *could* also call loadProfile() here if you prefer.
+});
+
+// ---------------------------------------------------------------------
+// MAKE FUNCTIONS AVAILABLE TO INLINE HTML (onclick / onload)
+// Because we're using type="module", exports are NOT global by default.
 // ---------------------------------------------------------------------
 window.signUpUser = signUpUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;
-window.selectMood = selectMood;
+
 window.loadProfile = loadProfile;
 window.updateDisplayName = updateDisplayName;
+
+window.selectMood = selectMood;
+
 window.createTextPost = createTextPost;
 window.createPhotoPost = createPhotoPost;
+
 window.loadFeed = loadFeed;
+
 window.loadThread = loadThread;
 window.createReply = createReply;
