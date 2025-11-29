@@ -342,175 +342,172 @@ export async function createPhotoPost() {
 // LOAD FEED
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-    const container = document.getElementById("feedContainer");
-    if (!container) return;
+  const container = document.getElementById("feedContainer");
+  if (!container) return;
 
-    // Update mood pill text
-    const mood = localStorage.getItem("currentMood") || "Neutral";
-    const moodLabel = document.getElementById("currentMoodLabel");
-    if (moodLabel) {
-        moodLabel.textContent = `Mood: ${mood}`;
-    }
+  // Update mood pill text
+  const mood = localStorage.getItem("currentMood") || "Neutral";
+  const moodLabel = document.getElementById("currentMoodLabel");
+  if (moodLabel) {
+    moodLabel.textContent = `Mood: ${mood}`;
+  }
 
+  try {
     // Get posts newest first
     const postsQuery = query(
-        collection(db, "posts"),
-        orderBy("created", "desc")
+      collection(db, "posts"),
+      orderBy("created", "desc")
     );
 
     const snapshot = await getDocs(postsQuery);
 
     if (snapshot.empty) {
-        container.innerHTML = `
-            <div class="empty-state">
-                Nothing here yet. Try creating a gentle first post.
-            </div>
-        `;
-        return;
+      container.innerHTML = `
+        <div class="empty-state">
+          Nothing here yet. Try creating a gentle first post.
+        </div>
+      `;
+      return;
     }
 
     container.innerHTML = "";
 
-    // Cache for user docs so we don't refetch the same user repeatedly
+    // Cache user docs so we don't refetch the same user repeatedly
     const userCache = new Map();
 
     for (const docSnap of snapshot.docs) {
-        const post = docSnap.data();
-        const postId = docSnap.id;
+      const post = docSnap.data();
+      const postId = docSnap.id;
 
-        // --- Look up author info ---
-        let userData = null;
-        if (post.userId) {
-            if (userCache.has(post.userId)) {
-                userData = userCache.get(post.userId);
-            } else {
-                const userDoc = await getDoc(doc(db, "users", post.userId));
-                userData = userDoc.exists() ? userDoc.data() : null;
-                userCache.set(post.userId, userData);
-            }
-        }
-
-        // Username fallback order:
-        // displayName -> email before @ -> short userId -> "Someone"
-        let displayName =
-            (userData && userData.displayName) ||
-            (userData && userData.email
-                ? userData.email.split("@")[0]
-                : null) ||
-            (post.userId ? post.userId.slice(0, 6) : null) ||
-            "Someone";
-
-        const avatarUrl =
-            (userData && userData.avatarUrl) ||
-            "default.png"; // your default profile picture
-
-        // Timestamp from Firestore
-        let createdLabel = "";
-        if (post.created && typeof post.created.toDate === "function") {
-            const d = post.created.toDate();
-            createdLabel = formatTimestamp(d);
-        }
-
-        // Tags: use post.tags if it exists, else derive from type
-        let tags = [];
-        if (Array.isArray(post.tags) && post.tags.length) {
-            tags = post.tags;
+      // --- Look up author info ---
+      let userData = null;
+      if (post.userId) {
+        if (userCache.has(post.userId)) {
+          userData = userCache.get(post.userId);
         } else {
-            tags = [post.type === "photo" ? "Photography" : "Reflection"];
+          const userDoc = await getDoc(doc(db, "users", post.userId));
+          userData = userDoc.exists() ? userDoc.data() : null;
+          userCache.set(post.userId, userData);
+        }
+      }
+
+      // Username fallback order
+      let displayName =
+        (userData && userData.displayName) ||
+        (userData && userData.email
+          ? userData.email.split("@")[0]
+          : null) ||
+        (post.userId ? post.userId.slice(0, 6) : null) ||
+        "Someone";
+
+      const avatarUrl =
+        (userData && userData.avatarUrl) ||
+        "default.png"; // your default avatar
+
+      // Timestamp label
+      let createdLabel = "";
+      if (post.created && typeof post.created.toDate === "function") {
+        const d = post.created.toDate();
+        createdLabel = formatTimestamp(d);
+      }
+
+      // Tags
+      let tags = [];
+      if (Array.isArray(post.tags) && post.tags.length) {
+        tags = post.tags;
+      } else {
+        tags = [post.type === "photo" ? "Photography" : "Reflection"];
+      }
+
+      const card = document.createElement("div");
+      card.className = "post-card";
+
+      const contentHtml =
+        post.type === "photo"
+          ? `<img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />`
+          : `<div class="post-text">${escapeHtml(post.content || "")}</div>`;
+
+      card.innerHTML = `
+        <div class="post-header">
+          <img
+            class="post-avatar"
+            src="${avatarUrl}"
+            alt="${escapeHtml(displayName)}'s avatar"
+          />
+          <div class="post-header-text">
+            <div class="post-username">${escapeHtml(displayName)}</div>
+            <div class="timestamp">${escapeHtml(createdLabel)}</div>
+          </div>
+        </div>
+
+        ${contentHtml}
+
+        <div class="post-meta">
+          <div class="tag-row">
+            ${tags
+              .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
+              .join(" ")}
+          </div>
+        </div>
+
+        <div class="comment-box">
+          <textarea
+            class="comment-input"
+            placeholder="Send a kind reply…"
+          ></textarea>
+          <button class="comment-send-btn">Send</button>
+        </div>
+      `;
+
+      // Comment send handler -> messages collection
+      const textarea = card.querySelector(".comment-input");
+      const sendBtn = card.querySelector(".comment-send-btn");
+
+      sendBtn.addEventListener("click", async () => {
+        const text = textarea.value.trim();
+        if (!text) return;
+
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+          alert("Please sign in to send a message.");
+          return;
         }
 
-        // --- Build the post card ---
-        const card = document.createElement("div");
-        card.className = "post-card";
+        try {
+          await addDoc(collection(db, "messages"), {
+            postId,
+            postOwnerId: post.userId || null,
+            fromUserId: currentUser.uid,
+            text,
+            created: serverTimestamp()
+          });
 
-        const contentHtml =
-            post.type === "photo"
-                ? `<img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />`
-                : `<div class="post-text">${escapeHtml(post.content || "")}</div>`;
+          textarea.value = "";
+          const oldLabel = sendBtn.textContent;
+          sendBtn.textContent = "Sent";
+          sendBtn.disabled = true;
 
-        card.innerHTML = `
-            <div class="post-header">
-                <img
-                    class="post-avatar"
-                    src="${avatarUrl}"
-                    alt="${escapeHtml(displayName)}'s avatar"
-                />
-                <div class="post-header-text">
-                    <div class="post-username">${escapeHtml(displayName)}</div>
-                    <div class="timestamp">${escapeHtml(createdLabel)}</div>
-                </div>
-            </div>
+          setTimeout(() => {
+            sendBtn.textContent = oldLabel;
+            sendBtn.disabled = false;
+          }, 1500);
+        } catch (err) {
+          console.error(err);
+          alert("Couldn't send that message yet. Please try again.");
+        }
+      });
 
-            ${contentHtml}
-
-            <div class="post-meta">
-                <div class="tag-row">
-                    ${tags
-                        .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
-                        .join(" ")}
-                </div>
-            </div>
-
-            <div class="comment-box">
-                <textarea
-                    class="comment-input"
-                    placeholder="Send a kind reply…"
-                ></textarea>
-                <button class="comment-send-btn">Send</button>
-            </div>
-        `;
-
-        // --- Wire up the comment send -> background message doc ---
-        const textarea = card.querySelector(".comment-input");
-        const sendBtn = card.querySelector(".comment-send-btn");
-
-        sendBtn.addEventListener("click", async () => {
-            const text = textarea.value.trim();
-            if (!text) return;
-
-            const currentUser = auth.currentUser;
-            if (!currentUser) {
-                alert("Please sign in to send a message.");
-                return;
-            }
-
-            try {
-                await addDoc(collection(db, "messages"), {
-                    postId,
-                    postOwnerId: post.userId || null,
-                    fromUserId: currentUser.uid,
-                    text,
-                    created: serverTimestamp()
-                });
-
-                textarea.value = "";
-                const oldLabel = sendBtn.textContent;
-                sendBtn.textContent = "Sent";
-                sendBtn.disabled = true;
-
-                setTimeout(() => {
-                    sendBtn.textContent = oldLabel;
-                    sendBtn.disabled = false;
-                }, 1500);
-            } catch (err) {
-                console.error(err);
-                alert("Couldn't send that message yet. Please try again.");
-            }
-        });
-
-        container.appendChild(card);
+      container.appendChild(card);
     }
-}
-        });
-    } catch (err) {
-        console.error(err);
-        container.innerHTML = `
-            <div class="empty-state">
-                Hmm, something went wrong loading the feed.<br/>
-                Try refreshing the page.
-            </div>
-        `;
-    }
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = `
+      <div class="empty-state">
+        Hmm, something went wrong loading the feed.<br/>
+        Try refreshing the page.
+      </div>
+    `;
+  }
 }
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
