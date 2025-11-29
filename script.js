@@ -342,157 +342,158 @@ export async function createPhotoPost() {
 // LOAD FEED
 // ---------------------------------------------------------------------
 export async function loadFeed() {
-    const feedContainer = document.getElementById("feedContainer");
-    const emptyState = document.getElementById("emptyState");
-    const template = document.getElementById("postTemplate");
+  const feedContainer = document.getElementById("feedContainer");
+  const emptyState = document.getElementById("emptyState");
+  const template = document.getElementById("postTemplate");
 
-    if (!feedContainer) return;
+  if (!feedContainer) return;
 
-    // Show current mood
-    const currentMood = localStorage.getItem("currentMood") || "Neutral";
-    const moodLabel = document.getElementById("currentMoodLabel");
-    if (moodLabel) {
-        moodLabel.textContent = `Mood: ${currentMood}`;
+  // Show current mood
+  const currentMood = localStorage.getItem("currentMood") || "Neutral";
+  const moodLabel = document.getElementById("currentMoodLabel");
+  if (moodLabel) {
+    moodLabel.textContent = `Mood: ${currentMood}`;
+  }
+
+  try {
+    const postsQuery = query(
+      collection(db, "posts"),
+      orderBy("created", "desc")
+    );
+
+    const snapshot = await getDocs(postsQuery);
+    feedContainer.innerHTML = "";
+
+    if (snapshot.empty) {
+      if (emptyState) emptyState.style.display = "block";
+      return;
+    } else if (emptyState) {
+      emptyState.style.display = "none";
     }
 
-    try {
-        const postsQuery = query(
-            collection(db, "posts"),
-            orderBy("created", "desc")
-        );
+    // Cache user profiles so we don't re-fetch the same user multiple times
+    const userCache = new Map();
 
-        const snapshot = await getDocs(postsQuery);
-        feedContainer.innerHTML = "";
+    for (const docSnap of snapshot.docs) {
+      const post = docSnap.data();
+      let card;
 
-        if (snapshot.empty) {
-            if (emptyState) emptyState.style.display = "block";
-            return;
-        } else if (emptyState) {
-            emptyState.style.display = "none";
-        }
+      if (template && template.content && template.content.firstElementChild) {
+        card = template.content.firstElementChild.cloneNode(true);
+      } else {
+        // Fallback if template is missing
+        card = document.createElement("div");
+        card.className = "post-card";
+      }
 
-        // Cache user profiles so we don't re-fetch the same user multiple times
-        const userCache = new Map();
-
-        for (const docSnap of snapshot.docs) {
-            const post = docSnap.data();
-            let card;
-
-            if (template && template.content && template.content.firstElementChild) {
-                card = template.content.firstElementChild.cloneNode(true);
-            } else {
-                // Fallback if template is missing
-                card = document.createElement("div");
-                card.className = "post-card";
-            }
-
-            card.dataset.postId = docSnap.id;
+      card.dataset.postId = docSnap.id;
 
       // ------- User profile --------
-let userProfile = null;
+      let userProfile = null;
 
-if (post.userId) {
-  if (userCache.has(post.userId)) {
-    userProfile = userCache.get(post.userId);
-  } else {
-    try {
-      const userDoc = await getDoc(doc(db, "users", post.userId));
-      if (userDoc.exists()) {
-        userProfile = userDoc.data();
-        userCache.set(post.userId, userProfile);
-      } else {
-        // No profile doc found, cache null so we don't retry forever
-        userCache.set(post.userId, null);
+      if (post.userId) {
+        if (userCache.has(post.userId)) {
+          userProfile = userCache.get(post.userId);
+        } else {
+          try {
+            const userDoc = await getDoc(doc(db, "users", post.userId));
+            if (userDoc.exists()) {
+              userProfile = userDoc.data();
+              userCache.set(post.userId, userProfile);
+            } else {
+              userCache.set(post.userId, null);
+            }
+          } catch (err) {
+            // If rules block this read, don't kill the whole feed.
+            console.warn(
+              "Could not load profile for user",
+              post.userId,
+              err.code || err.message
+            );
+            userCache.set(post.userId, null);
+          }
+        }
       }
-    } catch (err) {
-      // Don’t let a permission error kill the whole feed
-      console.warn(
-        "Could not load profile for user",
-        post.userId,
-        err.code || err.message
-      );
-      userCache.set(post.userId, null);
+
+      const avatarEl = card.querySelector(".post-avatar");
+      const usernameEl = card.querySelector(".post-username");
+      const userIdEl = card.querySelector(".post-userid");
+
+      if (avatarEl) {
+        avatarEl.src =
+          (userProfile && userProfile.avatarUrl) || "default.png";
+      }
+
+      if (usernameEl) {
+        usernameEl.textContent =
+          (userProfile && userProfile.displayName) || "Someone";
+      }
+
+      if (userIdEl) {
+        const handle =
+          userProfile && userProfile.email
+            ? userProfile.email.split("@")[0]
+            : post.userId || "user";
+        userIdEl.textContent = `@${handle}`;
+      }
+
+      // ------- Post content (text / image) --------
+      const textP = card.querySelector(".post-area p");
+      const imgEl = card.querySelector(".post-area img");
+
+      if (post.type === "photo" && post.imageUrl && imgEl) {
+        if (textP) textP.style.display = "none";
+        imgEl.src = post.imageUrl;
+        imgEl.style.display = "block";
+      } else {
+        if (textP) {
+          textP.textContent = post.content || "";
+          textP.style.display = "block";
+        }
+        if (imgEl) imgEl.style.display = "none";
+      }
+
+      // ------- Tags --------
+      const tagsContainer = card.querySelector(".post-tags");
+      if (tagsContainer) {
+        tagsContainer.innerHTML = "";
+        if (Array.isArray(post.tags) && post.tags.length) {
+          post.tags.forEach((tag) => {
+            const span = document.createElement("span");
+            span.className = "tag";
+            span.textContent = tag.startsWith("#") ? tag : `#${tag}`;
+            tagsContainer.appendChild(span);
+          });
+        } else {
+          // Default tag (current mood)
+          const span = document.createElement("span");
+          span.className = "tag";
+          span.textContent = `#${currentMood}`;
+          tagsContainer.appendChild(span);
+        }
+      }
+
+      // ------- Data attributes for interactions --------
+      const likeBtn = card.querySelector(".like-btn");
+      const commentInput = card.querySelector(".comment-input");
+
+      if (likeBtn) {
+        likeBtn.dataset.ownerId = post.userId || "";
+      }
+      if (commentInput) {
+        commentInput.dataset.ownerId = post.userId || "";
+      }
+
+      feedContainer.appendChild(card);
+    }
+  } catch (err) {
+    console.error("Error loading feed:", err);
+    if (emptyState) {
+      emptyState.style.display = "block";
+      emptyState.textContent =
+        "Sorry, there was a problem loading the feed.";
     }
   }
-}
-            const avatarEl = card.querySelector(".post-avatar");
-            const usernameEl = card.querySelector(".post-username");
-            const userIdEl = card.querySelector(".post-userid");
-
-            if (avatarEl) {
-                avatarEl.src =
-                    (userProfile && userProfile.avatarUrl) || "default.png";
-            }
-
-            if (usernameEl) {
-                usernameEl.textContent =
-                    (userProfile && userProfile.displayName) || "Someone";
-            }
-
-            if (userIdEl) {
-                const handle =
-                    userProfile && userProfile.email
-                        ? userProfile.email.split("@")[0]
-                        : post.userId || "user";
-                userIdEl.textContent = `@${handle}`;
-            }
-
-            // ------- Post content (text / image) --------
-            const textP = card.querySelector(".post-area p");
-            const imgEl = card.querySelector(".post-area img");
-
-            if (post.type === "photo" && post.imageUrl && imgEl) {
-                if (textP) textP.style.display = "none";
-                imgEl.src = post.imageUrl;
-                imgEl.style.display = "block";
-            } else {
-                if (textP) {
-                    textP.textContent = post.content || "";
-                    textP.style.display = "block";
-                }
-                if (imgEl) imgEl.style.display = "none";
-            }
-
-            // ------- Tags --------
-            const tagsContainer = card.querySelector(".post-tags");
-            if (tagsContainer) {
-                tagsContainer.innerHTML = "";
-                if (Array.isArray(post.tags) && post.tags.length) {
-                    post.tags.forEach(tag => {
-                        const span = document.createElement("span");
-                        span.className = "tag";
-                        span.textContent = tag.startsWith("#") ? tag : `#${tag}`;
-                        tagsContainer.appendChild(span);
-                    });
-                } else {
-                    // Default tag (current mood)
-                    const span = document.createElement("span");
-                    span.className = "tag";
-                    span.textContent = `#${currentMood}`;
-                    tagsContainer.appendChild(span);
-                }
-            }
-
-            // ------- Data attributes for interactions --------
-            const likeBtn = card.querySelector(".like-btn");
-            const commentInput = card.querySelector(".comment-input");
-
-            if (likeBtn) {
-                likeBtn.dataset.ownerId = post.userId || "";
-            }
-            if (commentInput) {
-                commentInput.dataset.ownerId = post.userId || "";
-            }
-
-            feedContainer.appendChild(card);
-        }
-    } catch (err) {
-        console.error("Error loading feed:", err);
-        if (emptyState) {
-            emptyState.style.display = "block";
-            emptyState.textContent = "Sorry, there was a problem loading the feed.";
-        }
-    }
 }
 // ---------------------------------------------------------------------
 // THREAD VIEW (thread.html)
