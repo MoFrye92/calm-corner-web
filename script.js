@@ -389,20 +389,26 @@ export async function loadFeed() {
             card.dataset.postId = docSnap.id;
 
             // ------- User profile --------
-            let userProfile = null;
-            if (post.userId) {
-                if (userCache.has(post.userId)) {
-                    userProfile = userCache.get(post.userId);
-                } else {
-                    const userDoc = await getDoc(doc(db, "users", post.userId));
-                    if (userDoc.exists()) {
-                        userProfile = userDoc.data();
-                        userCache.set(post.userId, userProfile);
-                    } else {
-                        userCache.set(post.userId, null);
-                    }
-                }
-            }
+let userProfile = null;
+if (post.userId) {
+  if (userCache.has(post.userId)) {
+    userProfile = userCache.get(post.userId);
+  } else {
+    try {
+      const userDoc = await getDoc(doc(db, "users", post.userId));
+      if (userDoc.exists()) {
+        userProfile = userDoc.data();
+        userCache.set(post.userId, userProfile);
+      } else {
+        userCache.set(post.userId, null);
+      }
+    } catch (err) {
+      console.warn("Could not load profile for", post.userId, err.code || err.message);
+      // Cache the null result so we don't keep retrying the same failing user
+      userCache.set(post.userId, null);
+    }
+  }
+}
 
             const avatarEl = card.querySelector(".post-avatar");
             const usernameEl = card.querySelector(".post-username");
