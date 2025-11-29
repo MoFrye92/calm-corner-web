@@ -5,8 +5,9 @@
     <title>Your Feed – A Calm Corner</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script type="module" src="script.js"></script>
-
-    <style>
+<script src="jQueryAssets/SpryDOMUtils.js"></script>
+    <script src="feed.js"></script>
+<style>
         body {
             margin: 0;
             background: #f4f6f8;
@@ -227,7 +228,7 @@
     </style>
 </head>
 
-<body onload="loadFeed()">
+<body>
     <div class="header">
         <div class="header-title">Your corner</div>
         <div class="header-sub">Little reflections, photos, and calm check-ins.</div>
@@ -238,10 +239,9 @@
     </div>
 
     <div class="container">
-        <div id="feedContainer"></div>
-        <div id="emptyState" class="empty-state" style="display:none;">
-            No posts yet. Tap ＋ to share something small.
-        </div>
+<div id="emptyState" class="empty-state" style="display:none;">
+      No posts yet. Tap ＋ to share something small.
+  </div>
     </div>
 
     <!-- Template used by JS to render each post -->

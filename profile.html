@@ -7,8 +7,9 @@
 
     <!-- Load Firebase + app logic -->
     <script type="module" src="script.js"></script>
-
-    <style>
+<script src="jQueryAssets/SpryDOMUtils.js"></script>
+    <script src="profile.js"></script>
+<style>
         body {
             margin: 0;
             font-family: system-ui, sans-serif;
@@ -135,7 +136,7 @@
     </style>
 </head>
 
-<body onload="loadProfile()">
+<body>
     <div class="header">
         <div class="header-title">Your Profile</div>
         <div class="header-sub">Manage your information</div>
@@ -147,14 +148,14 @@
 
             <input id="avatarInput" type="file" accept="image/*" />
 
-            <div class="edit-btn" onclick="document.getElementById('avatarInput').click()">
+            <div class="edit-btn" id="div1">
                 Change Photo
             </div>
 
             <div id="displayName" class="name">Loading…</div>
             <div id="emailField" class="email"></div>
 
-            <div class="edit-btn" onclick="updateDisplayName()">Edit Name</div>
+            <div class="edit-btn" id="div2">Edit Name</div>
         </div>
 
         <div class="card">
@@ -165,7 +166,7 @@
                 <a href="mood.html">Update Mood</a>
             </div>
             <div class="option">
-                <a href="#" onclick="logoutUser()">Log Out</a>
+                <a href="#" id="a1">Log Out</a>
             </div>
         </div>
     </div>

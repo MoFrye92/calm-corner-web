@@ -7,8 +7,9 @@
 
     <!-- Firebase + App Logic -->
     <script type="module" src="script.js"></script>
-
-    <style>
+<script src="jQueryAssets/SpryDOMUtils.js"></script>
+    <script src="signup.js"></script>
+<style>
         body {
             font-family: system-ui, Arial, sans-serif;
             background: #f5f6f8;
@@ -107,11 +108,11 @@
         <label>Password</label>
         <input id="passwordInput" type="password" placeholder="At least 6 characters" />
 
-        <button class="start-btn" onclick="signUpUser()">Create Account</button>
+        <button class="start-btn" id="button1">Create Account</button>
 
         <div class="switch">
             Already have an account?  
-            <a href="#login" onclick="document.getElementById('loginBox').style.display='block'; window.scrollTo(0,0);">
+            <a href="#login" id="a1">
                 Log in
             </a>
         </div>
@@ -129,7 +130,7 @@
         <label>Password</label>
         <input id="loginPassword" type="password" placeholder="Your password" />
 
-        <button class="start-btn" onclick="loginUser()">Log In</button>
+        <button class="start-btn" id="button2">Log In</button>
     </div>
 
 </body>
