@@ -71,31 +71,61 @@
         .post-card {
             background: #ffffff;
             border-radius: 18px;
-            padding: 16px 16px 14px;
+            padding: 16px;
             box-shadow: 0 8px 18px rgba(0,0,0,0.06);
             margin-bottom: 16px;
             font-size: 14px;
             line-height: 1.5;
         }
 
-        .post-text {
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .post-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #cbd8e3;
+        }
+
+        .post-user {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-username {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d2b3a;
+        }
+
+        .post-userid {
+            font-size: 12px;
+            color: #6b7785;
+        }
+
+        .post-area p {
             margin-bottom: 10px;
             white-space: pre-wrap;
         }
 
-        .post-photo {
+        .post-area img {
             width: 100%;
             border-radius: 14px;
             margin-bottom: 10px;
             display: block;
         }
 
-        .post-meta {
+        .post-tags {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-            color: #778292;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
         }
 
         .tag {
@@ -107,9 +137,50 @@
             color: #304157;
         }
 
-        .timestamp {
-            font-size: 11px;
-            color: #9aa4b3;
+        .post-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .like-btn {
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            color: #e94e77;
+            cursor: pointer;
+            align-self: flex-start;
+        }
+
+        .comment-box {
+            display: flex;
+            gap: 8px;
+        }
+
+        .comment-input {
+            flex: 1;
+            border-radius: 12px;
+            border: 1px solid #d5dce3;
+            padding: 8px 10px;
+            font-size: 13px;
+            resize: none;
+            background: #f9fafb;
+        }
+
+        .comment-send-btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 13px;
+            background: #1d2b3a;
+            color: #ffffff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .comment-send-btn:disabled {
+            opacity: 0.6;
+            cursor: default;
         }
 
         /* Floating create button */
@@ -130,7 +201,7 @@
             box-shadow: 0 12px 26px rgba(0,0,0,0.18);
         }
 
-        /* Bottom nav (shared style with other pages) */
+        /* Bottom nav */
         .nav {
             position: fixed;
             bottom: 0;
@@ -153,74 +224,6 @@
             font-weight: 600;
             color: #1d2b3a;
         }
-            /* Post header with avatar + name */
-    .post-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-
-    .post-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-        background: #cbd8e3;
-    }
-
-    .post-header-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .post-username {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1d2b3a;
-    }
-
-    /* Tag row inside post-meta */
-    .tag-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    /* Comment box under each post */
-    .comment-box {
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #eef1f4;
-        display: flex;
-        gap: 8px;
-    }
-
-    .comment-input {
-        flex: 1;
-        border-radius: 12px;
-        border: 1px solid #d5dce3;
-        padding: 8px 10px;
-        font-size: 13px;
-        resize: none;
-        background: #f9fafb;
-    }
-
-    .comment-send-btn {
-        border: none;
-        border-radius: 999px;
-        padding: 8px 12px;
-        font-size: 13px;
-        background: #1d2b3a;
-        color: #ffffff;
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    .comment-send-btn:disabled {
-        opacity: 0.6;
-        cursor: default;
-    }
     </style>
 </head>
 
@@ -228,7 +231,6 @@
     <div class="header">
         <div class="header-title">Your corner</div>
         <div class="header-sub">Little reflections, photos, and calm check-ins.</div>
-
         <div class="mood-pill">
             <span class="mood-dot"></span>
             <span id="currentMoodLabel">Mood: Neutral</span>
@@ -237,14 +239,39 @@
 
     <div class="container">
         <div id="feedContainer">
-            <div class="empty-state">Loading your corner…</div>
+            <div class="post-card" data-post-id="POST_ID">
+                <div class="post-header">
+                    <img class="post-avatar" src="default.png" alt="User avatar" />
+                    <div class="post-user">
+                        <div class="post-username">User Name</div>
+                        <div class="post-userid">@user123</div>
+                    </div>
+                </div>
+
+                <div class="post-area">
+                    <p>This is the post content. It can be a reflection, note, etc.</p>
+                    <!-- Or use image:
+                    <img src="IMAGE_URL" alt="Post photo" /> -->
+                </div>
+
+                <div class="post-tags">
+                    <span class="tag">#TagOne</span>
+                    <span class="tag">#TagTwo</span>
+                </div>
+
+                <div class="post-footer">
+                    <button class="like-btn" type="button" data-owner-id="OWNER_USER_ID" aria-label="Like this post">♥</button>
+                    <div class="comment-box">
+                        <input type="text" class="comment-input" placeholder="Comment input" data-owner-id="OWNER_USER_ID" />
+                        <button class="comment-send-btn" type="button" aria-label="Send comment">➤</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- New post button -->
     <a href="post.html" class="fab" aria-label="Create a post">＋</a>
 
-    <!-- Bottom navigation -->
     <div class="nav">
         <a href="feed.html" class="active">Feed</a>
         <a href="post.html">New</a>
