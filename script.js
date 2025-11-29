@@ -388,8 +388,9 @@ export async function loadFeed() {
 
             card.dataset.postId = docSnap.id;
 
-            // ------- User profile --------
+      // ------- User profile --------
 let userProfile = null;
+
 if (post.userId) {
   if (userCache.has(post.userId)) {
     userProfile = userCache.get(post.userId);
@@ -400,16 +401,20 @@ if (post.userId) {
         userProfile = userDoc.data();
         userCache.set(post.userId, userProfile);
       } else {
+        // No profile doc found, cache null so we don't retry forever
         userCache.set(post.userId, null);
       }
     } catch (err) {
-      console.warn("Could not load profile for", post.userId, err.code || err.message);
-      // Cache the null result so we don't keep retrying the same failing user
+      // Don’t let a permission error kill the whole feed
+      console.warn(
+        "Could not load profile for user",
+        post.userId,
+        err.code || err.message
+      );
       userCache.set(post.userId, null);
     }
   }
 }
-
             const avatarEl = card.querySelector(".post-avatar");
             const usernameEl = card.querySelector(".post-username");
             const userIdEl = card.querySelector(".post-userid");
