@@ -51,6 +51,36 @@ const auth = getAuth(app);
 const storage = getStorage(app);
 
 // ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// Simple HTML escape to avoid injecting raw HTML from post content / names
+function escapeHtml(str = "") {
+    return String(str).replace(/[&<>"']/g, (c) => {
+        const map = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        };
+        return map[c] || c;
+    });
+}
+// Human-friendly timestamps like "5 min ago"
+function formatTimestamp(date) {
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffMin < 1) return "Just now";
+    if (diffMin < 60) return `${diffMin} min${diffMin === 1 ? "" : "s"} ago`;
+    if (diffHr < 24) return `${diffHr} hour${diffHr === 1 ? "" : "s"} ago`;
+    if (diffDay < 7) return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+    return date.toLocaleDateString();
+}
+// ---------------------------------------------------------------------
 // AUTH FUNCTIONS
 // ---------------------------------------------------------------------
 export async function signUpUser() {
@@ -313,72 +343,164 @@ export async function createPhotoPost() {
 // ---------------------------------------------------------------------
 export async function loadFeed() {
     const container = document.getElementById("feedContainer");
-    if (!container) return; // Not on feed page
+    if (!container) return;
 
-    // Show mood in header (if element exists)
+    // Update mood pill text
     const mood = localStorage.getItem("currentMood") || "Neutral";
     const moodLabel = document.getElementById("currentMoodLabel");
     if (moodLabel) {
         moodLabel.textContent = `Mood: ${mood}`;
     }
 
-    container.innerHTML = `<div class="empty-state">Loading your corner…</div>`;
+    // Get posts newest first
+    const postsQuery = query(
+        collection(db, "posts"),
+        orderBy("created", "desc")
+    );
 
-    try {
-        const postsQuery = query(
-            collection(db, "posts"),
-            orderBy("created", "desc")
-        );
+    const snapshot = await getDocs(postsQuery);
 
-        const snapshot = await getDocs(postsQuery);
-        container.innerHTML = "";
+    if (snapshot.empty) {
+        container.innerHTML = `
+            <div class="empty-state">
+                Nothing here yet. Try creating a gentle first post.
+            </div>
+        `;
+        return;
+    }
 
-        if (snapshot.empty) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    Nothing here yet.<br/>
-                    Try sharing a short thought or a photo.
-                </div>
-            `;
-            return;
+    container.innerHTML = "";
+
+    // Cache for user docs so we don't refetch the same user repeatedly
+    const userCache = new Map();
+
+    for (const docSnap of snapshot.docs) {
+        const post = docSnap.data();
+        const postId = docSnap.id;
+
+        // --- Look up author info ---
+        let userData = null;
+        if (post.userId) {
+            if (userCache.has(post.userId)) {
+                userData = userCache.get(post.userId);
+            } else {
+                const userDoc = await getDoc(doc(db, "users", post.userId));
+                userData = userDoc.exists() ? userDoc.data() : null;
+                userCache.set(post.userId, userData);
+            }
         }
 
-        snapshot.forEach(docSnap => {
-            const post = docSnap.data();
-            const card = document.createElement("div");
-            card.className = "post-card";
+        // Username fallback order:
+        // displayName -> email before @ -> short userId -> "Someone"
+        let displayName =
+            (userData && userData.displayName) ||
+            (userData && userData.email
+                ? userData.email.split("@")[0]
+                : null) ||
+            (post.userId ? post.userId.slice(0, 6) : null) ||
+            "Someone";
 
-            let mainContent = "";
-            if (post.type === "photo" && post.imageUrl) {
-                mainContent += `<img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />`;
-            }
-            if (post.type === "text" && post.content) {
-                mainContent += `<div class="post-text">${post.content}</div>`;
-            }
+        const avatarUrl =
+            (userData && userData.avatarUrl) ||
+            "default.png"; // your default profile picture
 
-            const tagLabel = post.type === "photo" ? "Photography" : "Reflection";
+        // Timestamp from Firestore
+        let createdLabel = "";
+        if (post.created && typeof post.created.toDate === "function") {
+            const d = post.created.toDate();
+            createdLabel = formatTimestamp(d);
+        }
 
-            // Simple timestamp formatting (if created exists)
-            let timeLabel = "";
-            if (post.created && post.created.toDate) {
-                const d = post.created.toDate();
-                timeLabel = d.toLocaleString(undefined, {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit"
-                });
-            }
+        // Tags: use post.tags if it exists, else derive from type
+        let tags = [];
+        if (Array.isArray(post.tags) && post.tags.length) {
+            tags = post.tags;
+        } else {
+            tags = [post.type === "photo" ? "Photography" : "Reflection"];
+        }
 
-            card.innerHTML = `
-                ${mainContent}
-                <div class="post-meta">
-                    <span class="tag">${tagLabel}</span>
-                    <span class="timestamp">${timeLabel}</span>
+        // --- Build the post card ---
+        const card = document.createElement("div");
+        card.className = "post-card";
+
+        const contentHtml =
+            post.type === "photo"
+                ? `<img src="${post.imageUrl}" class="post-photo" alt="Shared photo" />`
+                : `<div class="post-text">${escapeHtml(post.content || "")}</div>`;
+
+        card.innerHTML = `
+            <div class="post-header">
+                <img
+                    class="post-avatar"
+                    src="${avatarUrl}"
+                    alt="${escapeHtml(displayName)}'s avatar"
+                />
+                <div class="post-header-text">
+                    <div class="post-username">${escapeHtml(displayName)}</div>
+                    <div class="timestamp">${escapeHtml(createdLabel)}</div>
                 </div>
-            `;
+            </div>
 
-            container.appendChild(card);
+            ${contentHtml}
+
+            <div class="post-meta">
+                <div class="tag-row">
+                    ${tags
+                        .map((t) => `<span class="tag">${escapeHtml(t)}</span>`)
+                        .join(" ")}
+                </div>
+            </div>
+
+            <div class="comment-box">
+                <textarea
+                    class="comment-input"
+                    placeholder="Send a kind reply…"
+                ></textarea>
+                <button class="comment-send-btn">Send</button>
+            </div>
+        `;
+
+        // --- Wire up the comment send -> background message doc ---
+        const textarea = card.querySelector(".comment-input");
+        const sendBtn = card.querySelector(".comment-send-btn");
+
+        sendBtn.addEventListener("click", async () => {
+            const text = textarea.value.trim();
+            if (!text) return;
+
+            const currentUser = auth.currentUser;
+            if (!currentUser) {
+                alert("Please sign in to send a message.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "messages"), {
+                    postId,
+                    postOwnerId: post.userId || null,
+                    fromUserId: currentUser.uid,
+                    text,
+                    created: serverTimestamp()
+                });
+
+                textarea.value = "";
+                const oldLabel = sendBtn.textContent;
+                sendBtn.textContent = "Sent";
+                sendBtn.disabled = true;
+
+                setTimeout(() => {
+                    sendBtn.textContent = oldLabel;
+                    sendBtn.disabled = false;
+                }, 1500);
+            } catch (err) {
+                console.error(err);
+                alert("Couldn't send that message yet. Please try again.");
+            }
+        });
+
+        container.appendChild(card);
+    }
+}
         });
     } catch (err) {
         console.error(err);
