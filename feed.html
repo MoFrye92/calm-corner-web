@@ -238,37 +238,47 @@
     </div>
 
     <div class="container">
-        <div id="feedContainer">
-            <div class="post-card" data-post-id="POST_ID">
-                <div class="post-header">
-                    <img class="post-avatar" src="default.png" alt="User avatar" />
-                    <div class="post-user">
-                        <div class="post-username">User Name</div>
-                        <div class="post-userid">@user123</div>
-                    </div>
-                </div>
+        <div id="feedContainer"></div>
+        <div id="emptyState" class="empty-state" style="display:none;">
+            No posts yet. Tap ＋ to share something small.
+        </div>
+    </div>
 
-                <div class="post-area">
-                    <p>This is the post content. It can be a reflection, note, etc.</p>
-                    <!-- Or use image:
-                    <img src="IMAGE_URL" alt="Post photo" /> -->
+    <!-- Template used by JS to render each post -->
+    <template id="postTemplate">
+        <div class="post-card" data-post-id="">
+            <div class="post-header">
+                <img class="post-avatar" src="default.png" alt="User avatar" />
+                <div class="post-user">
+                    <div class="post-username">User Name</div>
+                    <div class="post-userid">@user123</div>
                 </div>
+            </div>
 
-                <div class="post-tags">
-                    <span class="tag">#TagOne</span>
-                    <span class="tag">#TagTwo</span>
-                </div>
+            <div class="post-area">
+                <p>This is the post content. It can be a reflection, note, etc.</p>
+                <img src="" alt="Post photo" style="display:none;" />
+            </div>
 
-                <div class="post-footer">
-                    <button class="like-btn" type="button" data-owner-id="OWNER_USER_ID" aria-label="Like this post">♥</button>
-                    <div class="comment-box">
-                        <input type="text" class="comment-input" placeholder="Comment input" data-owner-id="OWNER_USER_ID" />
-                        <button class="comment-send-btn" type="button" aria-label="Send comment">➤</button>
-                    </div>
+            <div class="post-tags">
+                <span class="tag">#TagOne</span>
+                <span class="tag">#TagTwo</span>
+            </div>
+
+            <div class="post-footer">
+                <button class="like-btn" type="button" data-owner-id="" aria-label="Like this post">♥</button>
+                <div class="comment-box">
+                    <input
+                        type="text"
+                        class="comment-input"
+                        placeholder="Leave a gentle comment"
+                        data-owner-id=""
+                    />
+                    <button class="comment-send-btn" type="button" aria-label="Send comment">➤</button>
                 </div>
             </div>
         </div>
-    </div>
+    </template>
 
     <a href="post.html" class="fab" aria-label="Create a post">＋</a>
 
