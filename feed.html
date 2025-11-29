@@ -153,6 +153,74 @@
             font-weight: 600;
             color: #1d2b3a;
         }
+            /* Post header with avatar + name */
+    .post-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .post-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #cbd8e3;
+    }
+
+    .post-header-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .post-username {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1d2b3a;
+    }
+
+    /* Tag row inside post-meta */
+    .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    /* Comment box under each post */
+    .comment-box {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #eef1f4;
+        display: flex;
+        gap: 8px;
+    }
+
+    .comment-input {
+        flex: 1;
+        border-radius: 12px;
+        border: 1px solid #d5dce3;
+        padding: 8px 10px;
+        font-size: 13px;
+        resize: none;
+        background: #f9fafb;
+    }
+
+    .comment-send-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 13px;
+        background: #1d2b3a;
+        color: #ffffff;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .comment-send-btn:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
     </style>
 </head>
 
