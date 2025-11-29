@@ -12,6 +12,7 @@ import {
   getDoc,
   setDoc,
   getDocs,
+  deleteDoc,
   serverTimestamp,
   query,
   orderBy,
@@ -474,14 +475,30 @@ export async function loadFeed() {
       }
 
       // ------- Data attributes for interactions --------
-      const likeBtn = card.querySelector(".like-btn");
+           const likeBtn = card.querySelector(".like-btn");
       const commentInput = card.querySelector(".comment-input");
+      const sendBtn = card.querySelector(".comment-send-btn");
 
+      // Wire like button
       if (likeBtn) {
-        likeBtn.dataset.ownerId = post.userId || "";
+        likeBtn.addEventListener("click", () => {
+          toggleLike(docSnap.id);
+        });
       }
-      if (commentInput) {
-        commentInput.dataset.ownerId = post.userId || "";
+
+      // Wire comment send button
+      if (sendBtn && commentInput) {
+        sendBtn.addEventListener("click", () => {
+          sendComment(docSnap.id, commentInput);
+        });
+
+        // optional: Enter key submits too
+        commentInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendComment(docSnap.id, commentInput);
+          }
+        });
       }
 
       feedContainer.appendChild(card);
@@ -592,7 +609,62 @@ export async function createReply() {
     alert("Error sending reply.");
   }
 }
+// ---------------------------------------------------------------------
+// LIKES
+// ---------------------------------------------------------------------
+async function toggleLike(postId) {
+  const user = auth.currentUser;
+  if (!user) {
+    alert("You need to be logged in to like posts.");
+    return;
+  }
 
+  const likeRef = doc(db, "posts", postId, "likes", user.uid);
+
+  try {
+    const snap = await getDoc(likeRef);
+
+    if (snap.exists()) {
+      // already liked -> unlike
+      await deleteDoc(likeRef);
+    } else {
+      // not liked -> like
+      await setDoc(likeRef, {
+        userId: user.uid,
+        created: serverTimestamp(),
+      });
+    }
+  } catch (err) {
+    console.error("Error toggling like:", err);
+  }
+}
+
+// ---------------------------------------------------------------------
+// COMMENTS (simple replies under a post)
+// ---------------------------------------------------------------------
+async function sendComment(postId, inputEl) {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  const user = auth.currentUser;
+  if (!user) {
+    alert("You need to be logged in to comment.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "posts", postId, "replies"), {
+      text,
+      userId: user.uid,
+      authorName: user.displayName || "Someone",
+      created: serverTimestamp(),
+    });
+
+    inputEl.value = "";
+  } catch (err) {
+    console.error("Error sending comment:", err);
+  }
+}
 // ---------------------------------------------------------------------
 // GLOBAL PAGE INITIALIZATION
 // ---------------------------------------------------------------------
